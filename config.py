@@ -54,7 +54,8 @@ SEGMENTS = [
     # Show the last command's exit code if it was non-zero
     #    'exit_code',
 
-	'docker',
+    # Show the current docker status
+	# 'docker',
 
     # Shows a '#' if the current user is root, '$' otherwise
     # Also, changes color if the last command exited with a non-zero error code
