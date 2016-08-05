@@ -615,7 +615,6 @@ def add_docker_segment(powerline):
 
     list_dict_segments = docker(None)
 
-    print(Color.GIT_STAGED_FG)
     for dict_segment in list_dict_segments:
         # print(dict_segment.keys())
         color_fg, color_bg = dict_segment['colors']
