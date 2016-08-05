@@ -8,14 +8,6 @@ from requests.exceptions import ConnectionError
 from docker import Client, tls
 
 
-# class Color(DefaultColor):
-#     DOCKER_BG = 32
-#     DOCKER_FG = 255
-#     DOCKER_RUNNING_FG = 40
-#     DOCKER_PAUSED_FG = 214
-#     DOCKER_EXITED_FG = 160
-#     DOCKER_RESTARTING_FG = 253
-
 DOCKER_STATUSES = ('running', 'paused', 'exited', 'restarting')
 
 SEGMENT_INFO = {
@@ -130,15 +122,8 @@ Highlight groups used: ``docker_running``, ``docker_paused``, ``docker_exited``,
 ''')
 
 def add_docker_segment(powerline):    
-    # print(dir(powerline))
-    # print(docker_segment)
-    # print(segments)
-    # print(dir(Color))
-
     list_dict_segments = docker(None)
 
     for dict_segment in list_dict_segments:
-        # print(dict_segment.keys())
         color_fg, color_bg = dict_segment['colors']
-        # _add(dict_segment, 'contents', Color.GIT_STAGED_FG, Color.GIT_STAGED_BG)
         powerline.append(dict_segment['contents'], color_fg, color_bg)
