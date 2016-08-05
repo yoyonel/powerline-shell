@@ -1,8 +1,4 @@
 # vim:fileencoding=utf-8:noet
-import re
-import subprocess
-import os
-
 from powerline.segments import Segment, with_docstring
 from requests.exceptions import ConnectionError
 from docker import Client, tls
@@ -14,30 +10,30 @@ SEGMENT_INFO = {
     'running': {
         # 'icon': '●',
         'icon': u'\u2022',
-        'highlight_group': 'docker_running',
+        # 'highlight_group': 'docker_running',
         'colors': [Color.DOCKER_RUNNING_FG, Color.DOCKER_BG]
     },
     'paused': {
         'icon': '~',
-        'highlight_group': 'docker_paused',
+        # 'highlight_group': 'docker_paused',
         'colors': [Color.DOCKER_PAUSED_FG, Color.DOCKER_BG]
     },
     'exited': {
         # 'icon': '✖',
         'icon': u'\u00D7',
-        'highlight_group': 'docker_exited',
+        # 'highlight_group': 'docker_exited',
         'colors': [Color.DOCKER_EXITED_FG, Color.DOCKER_BG]
     },
     'restarting': {
-        'icon': '↻',
-        'highlight_group': 'docker_restarting',
+        # 'icon': '↻',
+        'icon': u'\u21BB',
+        # 'highlight_group': 'docker_restarting',
         'colors': [Color.DOCKER_RESTARTING_FG, Color.DOCKER_BG]
     }
 }
 
 
 class DockerSegment(Segment):
-
     def get_statuses_count(self):
         count = []
         for status in DOCKER_STATUSES:
@@ -50,24 +46,31 @@ class DockerSegment(Segment):
 
         return count
 
-    def build_segments(self, statuses_count):
+    @staticmethod
+    def build_segments(statuses_count):
         segments = [
             # {'contents': u'\U0001F433 ', 'highlight_groups': ['docker'], 'divider_highlight_group': 'docker:divider'}
-            {'contents': u'\u1F433', 'highlight_groups': ['docker'], 'divider_highlight_group': 'docker:divider', 'colors': [Color.DOCKER_FG, Color.DOCKER_BG]}
+            {
+                'contents': u'\u1F433',
+                # 'highlight_groups': ['docker'],
+                # 'divider_highlight_group': 'docker:divider',
+                'colors': [Color.DOCKER_FG, Color.DOCKER_BG]
+            }
         ]
 
         for count in statuses_count:
             segments.append({
                 'contents': ' %s %d' % (SEGMENT_INFO[count['status']]['icon'], count['quantity']),
-                'highlight_groups': [SEGMENT_INFO[count['status']]['highlight_group'], 'docker'],
-                'divider_highlight_group': 'docker:divider',
+                # 'highlight_groups': [SEGMENT_INFO[count['status']]['highlight_group'], 'docker'],
+                # 'divider_highlight_group': 'docker:divider',
                 'colors': SEGMENT_INFO[count['status']]['colors']
             })
 
         return segments
 
-    def __call__(self, pl, base_url='unix://var/run/docker.sock', use_tls=False, ca_cert=None, client_cert=None, client_key=None, ignore_statuses=[]):
-        #pl.debug('Running powerline-docker')
+    def __call__(self, pl, base_url='unix://var/run/docker.sock', use_tls=False, ca_cert=None, client_cert=None,
+                 client_key=None, ignore_statuses=[]):
+        # pl.debug('Running powerline-docker')
 
         self.pl = pl
         self.ignore_statuses = ignore_statuses
@@ -121,7 +124,8 @@ Divider highlight group used: ``docker:divider``.
 Highlight groups used: ``docker_running``, ``docker_paused``, ``docker_exited``, ``docker_restarting``, ``docker``.
 ''')
 
-def add_docker_segment(powerline):    
+
+def add_docker_segment(powerline):
     list_dict_segments = docker(None)
 
     for dict_segment in list_dict_segments:

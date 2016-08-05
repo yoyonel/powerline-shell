@@ -21,7 +21,7 @@ class DefaultColor:
     READONLY_BG = 124
     READONLY_FG = 254
 
-    SSH_BG = 166 # medium orange
+    SSH_BG = 166  # medium orange
     SSH_FG = 254
 
     REPO_CLEAN_BG = 148  # a light green color
@@ -64,6 +64,7 @@ class DefaultColor:
     DOCKER_PAUSED_FG = 214
     DOCKER_EXITED_FG = 160
     DOCKER_RESTARTING_FG = 253
+
 
 class Color(DefaultColor):
     """
