@@ -56,6 +56,15 @@ class DefaultColor:
     VIRTUAL_ENV_BG = 35  # a mid-tone green
     VIRTUAL_ENV_FG = 00
 
+    # Colors for Docker segment
+    # url: http://bitmote.com/index.php?post/2012/11/19/Using-ANSI-Color-Codes-to-Colorize-Your-Bash-Prompt-on-Linux
+    DOCKER_BG = 32
+    DOCKER_FG = 255
+    DOCKER_RUNNING_FG = 40
+    DOCKER_PAUSED_FG = 214
+    DOCKER_EXITED_FG = 160
+    DOCKER_RESTARTING_FG = 253
+
 class Color(DefaultColor):
     """
     This subclass is required when the user chooses to use 'default' theme.
