@@ -8,7 +8,7 @@
 
 SEGMENTS = [
     # Set the terminal window title to user@host:dir
-    #    'set_term_title',
+    # 'set_term_title',
 
     # Show current virtual environment (see http://www.virtualenv.org/)
     #    'virtual_env',
@@ -54,7 +54,7 @@ SEGMENTS = [
     # Show the last command's exit code if it was non-zero
     #    'exit_code',
 
-	'docker',
+    'docker',
 
     # Shows a '#' if the current user is root, '$' otherwise
     # Also, changes color if the last command exited with a non-zero error code

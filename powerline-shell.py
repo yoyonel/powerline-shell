@@ -478,10 +478,6 @@ def add_git_segment(powerline):
 
 add_git_segment(powerline)
 # vim:fileencoding=utf-8:noet
-import re
-import subprocess
-import os
-
 from powerline.segments import Segment, with_docstring
 from requests.exceptions import ConnectionError
 from docker import Client, tls
@@ -517,7 +513,6 @@ SEGMENT_INFO = {
 
 
 class DockerSegment(Segment):
-
     def get_statuses_count(self):
         count = []
         for status in DOCKER_STATUSES:
@@ -552,8 +547,9 @@ class DockerSegment(Segment):
 
         return segments
 
-    def __call__(self, pl, base_url='unix://var/run/docker.sock', use_tls=False, ca_cert=None, client_cert=None, client_key=None, ignore_statuses=[]):
-        #pl.debug('Running powerline-docker')
+    def __call__(self, pl, base_url='unix://var/run/docker.sock', use_tls=False, ca_cert=None, client_cert=None,
+                 client_key=None, ignore_statuses=[]):
+        # pl.debug('Running powerline-docker')
 
         self.pl = pl
         self.ignore_statuses = ignore_statuses
@@ -606,6 +602,7 @@ Divider highlight group used: ``docker:divider``.
 
 Highlight groups used: ``docker_running``, ``docker_paused``, ``docker_exited``, ``docker_restarting``, ``docker``.
 ''')
+
 
 def add_docker_segment(powerline):
     list_dict_segments = docker(None)
