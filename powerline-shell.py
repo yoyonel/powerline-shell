@@ -6,6 +6,11 @@ import argparse
 import os
 import sys
 
+# import unicodedata
+# import re
+# from wcwidth import wcswidth
+# from ansicolor import strip_escapes
+# import subprocess
 py3 = sys.version_info.major == 3
 
 
@@ -18,20 +23,31 @@ class Powerline:
         'compatible': {
             'lock': 'RO',
             'network': 'SSH',
+            #
             'separator': u'\u25B6',
-            'separator_thin': u'\u276F'
+            'separator_thin': u'\u276F',
+            #
+            'separator_right': u'\u25C0',
+            'separator_right_thin': u'\u276E'
         },
         'patched': {
             'lock': u'\uE0A2',
             'network': u'\uE0A2',
+
             'separator': u'\uE0B0',
-            'separator_thin': u'\uE0B1'
+            'separator_thin': u'\uE0B1',
+            #
+            'separator_right': u'\u25C9',
+            'separator_right_thin': u'\u2B83'
         },
         'flat': {
             'lock': '',
             'network': '',
             'separator': '',
-            'separator_thin': ''
+            'separator_thin': '',
+            #
+            'separator_right': '',
+            'separator_right_thin': ''
         },
     }
 
@@ -41,17 +57,34 @@ class Powerline:
         'bare': '%s',
     }
 
-    def __init__(self, args, cwd):
-        self.args = args
+    def __init__(self, _args, cwd, width=0, pos_segment="left"):
+        self.args = _args
         self.cwd = cwd
         mode, shell = args.mode, args.shell
         self.color_template = self.color_templates[shell]
         self.reset = self.color_template % '[0m'
         self.lock = Powerline.symbols[mode]['lock']
         self.network = Powerline.symbols[mode]['network']
+        #
         self.separator = Powerline.symbols[mode]['separator']
         self.separator_thin = Powerline.symbols[mode]['separator_thin']
+        self.separator_right = Powerline.symbols[mode]['separator_right']
+        self.separator_right_thin = Powerline.symbols[mode]['separator_right_thin']
+        #
         self.segments = []
+        self.segments_right = []
+        self.segments_down = []
+        #
+        self.width = width
+        self.segments_width = 0
+        self.segments_right_width = 0
+        self.segments_down_width = 0
+        #
+        self.pos_segment = pos_segment
+        self.cur_position = "left"
+
+    def set_cur_position(self, pos):
+        self.cur_position = pos
 
     def color(self, prefix, code):
         if code is None:
@@ -66,21 +99,98 @@ class Powerline:
         return self.color('48', code)
 
     def append(self, content, fg, bg, separator=None, separator_fg=None):
+        if self.cur_position == "right":
+            self.append_right(content, fg, bg, separator, separator_fg)
+        elif self.cur_position == "down":
+            self.append_down(content, fg, bg, separator, separator_fg)
+        else:
+            self.append_left(content, fg, bg, separator, separator_fg)
+
+    def append_left(self, content, fg, bg, separator=None, separator_fg=None):
         self.segments.append((content, fg, bg,
-            separator if separator is not None else self.separator,
-            separator_fg if separator_fg is not None else bg))
+                              separator if separator is not None else self.separator,
+                              separator_fg if separator_fg is not None else bg))
+        self.segments_width += len(content.encode('utf-8'))
+        # print("append_left - content:", '*' + content.encode('utf-8') + '*')
+
+    def append_right(self, content, fg, bg, separator=None, separator_fg=None):
+        self.segments_right.append((content, fg, bg,
+                                    separator if separator is not None else self.separator,
+                                    separator_fg if separator_fg is not None else bg))
+        self.segments_right_width += len(content.encode('utf-8'))
+        # print("append_right - content:", '*' + content.encode('utf-8') + '*')
+        # print("append_right - content:", '/' + content + '\\')
+        # print("append_right - len(content):", len(content))
+
+    def append_down(self, content, fg, bg, separator=None, separator_fg=None):
+        self.segments_down.append((content, fg, bg,
+                                   separator if separator is not None else self.separator,
+                                   separator_fg if separator_fg is not None else bg))
+        self.segments_down_width += len(content)
 
     def draw(self):
-        text = (''.join(self.draw_segment(i) for i in range(len(self.segments)))
-                + self.reset) + ' '
+        text_left = (''.join(self.draw_segment(i) for i in range(len(self.segments)))
+                     + self.reset) + ' '
+        self.segments_width += len(self.segments) * 3  # for self.reset*len(self.segments) + ' '
+        #
+        text_right = (''.join(self.draw_right_segment(i) for i in reversed(range(len(self.segments_right))))
+                      + self.reset) + ' '
+        self.segments_right_width += len(self.segments_right) * 3  # for self.reset*len(self.segments_right) + ' '
+        # self.segments_right_width = 21 + 3
+
+        text_down = (''.join(self.draw_down_segment(i) for i in range(len(self.segments_down)))
+                     + self.reset) + ' '
+
+        total_widths = self.segments_width + \
+                       self.segments_right_width
+
+        spaces = max(0, int(self.width) - total_widths)
+        fold = ' ' * spaces
+
+        if len(self.segments_down) > 0:
+            text = text_left + fold + text_right + \
+                   '\n' + text_down + self.reset
+        else:
+            text = text_left + self.reset
+
+        # print("self.segments_width: ", self.segments_width)
+        # print("self.segments_right_width: ", self.segments_right_width)
+        # print("total_width: ", total_widths)
+
+        # bashCommand = "echo {}".format(text_right.encode('utf-8'))
+        # process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+        # output = process.communicate()[0]
+        # print("output: ", output)
+        # print("len(output): ", len(output.decode('utf-8')))
+
+
+        # print(wcswidth(text_right))
+        # print(len(strip_escapes(text_right)))
+        #
+        # # \\[\\e%s\\]
+        # # ('[%s;5;%sm' % (prefix, code))
+        # # - prefix : [38, 48]
+        # # \[\b[0-9]\{3\}\b;5;\b[0-9]\{3\}\bm
+        # ansi_escape = re.compile(r'\\\[\\e\[[0-9]*;5;[0-9]*m\\\]')
+        # sub_text_right = ansi_escape.sub('', text_right)
+        # # sub_text_right = unicodedata.normalize('NFKD', sub_text_right).encode('ascii', 'ignore')
+        # s_text_right = str(sub_text_right.encode('utf-8'))
+        # for c in s_text_right:
+        # print(c + " ")
+        # print(len(s_text_right))
+        # print(self.segments_right_width)
+
         if py3:
             return text
         else:
-            return text.encode('utf-8')
+            # return text.encode('utf-8')
+            return text_left.encode('utf-8'), \
+                   text_right.encode('utf-8'), \
+                   text_down.encode('utf-8')
 
     def draw_segment(self, idx):
         segment = self.segments[idx]
-        next_segment = self.segments[idx + 1] if idx < len(self.segments)-1 else None
+        next_segment = self.segments[idx + 1] if idx < len(self.segments) - 1 else None
 
         return ''.join((
             self.fgcolor(segment[1]),
@@ -89,6 +199,32 @@ class Powerline:
             self.bgcolor(next_segment[2]) if next_segment else self.reset,
             self.fgcolor(segment[4]),
             segment[3]))
+
+    def draw_right_segment(self, idx):
+        segment = self.segments_right[idx]
+        next_segment = self.segments_right[idx + 1] if idx < len(self.segments_right) - 1 else None
+
+        return ''.join((
+            self.bgcolor(next_segment[2]) if next_segment else self.reset,
+            self.fgcolor(segment[4]),
+            segment[3],
+            self.fgcolor(segment[1]),
+            self.bgcolor(segment[2]),
+            segment[0])
+        )
+
+    def draw_down_segment(self, idx):
+        segment = self.segments_down[idx]
+        next_segment = self.segments_down[idx + 1] if idx < len(self.segments_down) - 1 else None
+
+        return ''.join((
+            self.fgcolor(segment[1]),
+            self.bgcolor(segment[2]),
+            segment[0],
+            self.bgcolor(next_segment[2]) if next_segment else self.reset,
+            self.fgcolor(segment[4]),
+            segment[3]))
+
 
 def get_valid_cwd():
     """ We check if the current working directory is valid or not. Typically
@@ -104,8 +240,8 @@ def get_valid_cwd():
         cwd = os.getenv('PWD') or os.getcwd()
     except:
         warn("Your current directory is invalid. If you open a ticket at " +
-            "https://github.com/milkbikis/powerline-shell/issues/new " +
-            "we would love to help fix the issue.")
+             "https://github.com/milkbikis/powerline-shell/issues/new " +
+             "we would love to help fix the issue.")
         sys.stdout.write("> ")
         sys.exit(1)
 
@@ -116,33 +252,41 @@ def get_valid_cwd():
         up = os.sep.join(parts)
     if cwd != up:
         warn("Your current directory is invalid. Lowest valid directory: "
-            + up)
+             + up)
     return cwd
 
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--cwd-mode', action='store',
-            help='How to display the current directory', default='fancy',
-            choices=['fancy', 'plain', 'dironly'])
+                            help='How to display the current directory', default='fancy',
+                            choices=['fancy', 'plain', 'dironly'])
     arg_parser.add_argument('--cwd-only', action='store_true',
-            help='Deprecated. Use --cwd-mode=dironly')
+                            help='Deprecated. Use --cwd-mode=dironly')
     arg_parser.add_argument('--cwd-max-depth', action='store', type=int,
-            default=5, help='Maximum number of directories to show in path')
+                            default=5, help='Maximum number of directories to show in path')
     arg_parser.add_argument('--cwd-max-dir-size', action='store', type=int,
-            help='Maximum number of letters displayed for each directory in the path')
+                            help='Maximum number of letters displayed for each directory in the path')
     arg_parser.add_argument('--colorize-hostname', action='store_true',
-            help='Colorize the hostname based on a hash of itself.')
+                            help='Colorize the hostname based on a hash of itself.')
     arg_parser.add_argument('--mode', action='store', default='patched',
-            help='The characters used to make separators between segments',
-            choices=['patched', 'compatible', 'flat'])
+                            help='The characters used to make separators between segments',
+                            choices=['patched', 'compatible', 'flat'])
     arg_parser.add_argument('--shell', action='store', default='bash',
-            help='Set this to your shell type', choices=['bash', 'zsh', 'bare'])
+                            help='Set this to your shell type', choices=['bash', 'zsh', 'bare'])
     arg_parser.add_argument('prev_error', nargs='?', type=int, default=0,
-            help='Error code returned by the last command')
+                            help='Error code returned by the last command')
+    #
+    arg_parser.add_argument('--width', action='store', default=0,
+                            help='')
+    arg_parser.add_argument('--chroot', action='store', default=0)
+    arg_parser.add_argument('--extra', action='store', default='')
+    arg_parser.add_argument('--pos_segment', action='store', default='left',
+                            help='')
+    #
     args = arg_parser.parse_args()
 
-    powerline = Powerline(args, get_valid_cwd())
+    powerline = Powerline(args, get_valid_cwd(), width=args.width, pos_segment=args.pos_segment)
 
 
 class DefaultColor:
@@ -235,26 +379,33 @@ def add_time_segment(powerline):
     powerline.append(time, Color.HOSTNAME_FG, Color.HOSTNAME_BG)
 
 
+powerline.set_cur_position("left")
 add_time_segment(powerline)
+def add_hostname_segment(powerline):
+    if powerline.args.colorize_hostname:
+        from lib.color_compliment import stringToHashToColorAndOpposite
+        from lib.colortrans import rgb2short
+        from socket import gethostname
+        hostname = gethostname()
+        FG, BG = stringToHashToColorAndOpposite(hostname)
+        FG, BG = (rgb2short(*color) for color in [FG, BG])
+        host_prompt = ' %s ' % hostname.split('.')[0]
 
-def add_username_segment(powerline):
-    import os
-    if powerline.args.shell == 'bash':
-        user_prompt = ' \\u '
-    elif powerline.args.shell == 'zsh':
-        user_prompt = ' %n '
+        powerline.append(host_prompt, FG, BG)
     else:
-        user_prompt = ' %s ' % os.getenv('USER')
+        if powerline.args.shell == 'bash':
+            host_prompt = ' \\h '
+        elif powerline.args.shell == 'zsh':
+            host_prompt = ' %m '
+        else:
+            import socket
+            host_prompt = ' %s ' % socket.gethostname().split('.')[0]
 
-    if os.getenv('USER') == 'root':
-        bgcolor = Color.USERNAME_ROOT_BG
-    else:
-        bgcolor = Color.USERNAME_BG
-
-    powerline.append(user_prompt, Color.USERNAME_FG, bgcolor)
+        powerline.append(host_prompt, Color.HOSTNAME_FG, Color.HOSTNAME_BG)
 
 
-add_username_segment(powerline)
+powerline.set_cur_position("left")
+add_hostname_segment(powerline)
 import os
 
 ELLIPSIS = u'\u2026'
@@ -347,17 +498,8 @@ def add_cwd_segment(powerline):
                          separator, separator_fg)
 
 
+powerline.set_cur_position("down")
 add_cwd_segment(powerline)
-import os
-
-def add_read_only_segment(powerline):
-    cwd = powerline.cwd or os.getenv('PWD')
-
-    if not os.access(cwd, os.W_OK):
-        powerline.append(' %s ' % powerline.lock, Color.READONLY_FG, Color.READONLY_BG)
-
-
-add_read_only_segment(powerline)
 import re
 import subprocess
 import os
@@ -461,11 +603,13 @@ def add_git_segment(powerline):
         fg = Color.REPO_DIRTY_FG
 
     powerline.append(' %s ' % branch, fg, bg)
+    # powerline.append_right(' %s ' % branch, fg, bg, separator=powerline.separator_right)
 
     def _add(_dict, _key, fg, bg):
         if _dict[_key]:
             _str = u' {}{} '.format(_n_or_empty(_dict, _key), GIT_SYMBOLS[_key])
             powerline.append(_str, fg, bg)
+            # powerline.append_right(_str, fg, bg, separator=powerline.separator_right)
 
     if branch_info:
         _add(branch_info, 'ahead', Color.GIT_AHEAD_FG, Color.GIT_AHEAD_BG)
@@ -476,7 +620,29 @@ def add_git_segment(powerline):
     _add(stats, 'conflicted', Color.GIT_CONFLICTED_FG, Color.GIT_CONFLICTED_BG)
 
 
+powerline.set_cur_position("left")
 add_git_segment(powerline)
+import os
+import re
+import subprocess
+
+def add_jobs_segment(powerline):
+    pppid_proc = subprocess.Popen(['ps', '-p', str(os.getppid()), '-oppid='],
+                                  stdout=subprocess.PIPE)
+    pppid = pppid_proc.communicate()[0].decode("utf-8").strip()
+
+    output_proc = subprocess.Popen(['ps', '-a', '-o', 'ppid'],
+                                   stdout=subprocess.PIPE)
+    output = output_proc.communicate()[0].decode("utf-8")
+
+    num_jobs = len(re.findall(str(pppid), output)) - 1
+
+    if num_jobs > 0:
+        powerline.append(' %d ' % num_jobs, Color.JOBS_FG, Color.JOBS_BG)
+
+
+powerline.set_cur_position("left")
+add_jobs_segment(powerline)
 # vim:fileencoding=utf-8:noet
 from powerline.segments import Segment, with_docstring
 from requests.exceptions import ConnectionError
@@ -610,8 +776,10 @@ def add_docker_segment(powerline):
     for dict_segment in list_dict_segments:
         color_fg, color_bg = dict_segment['colors']
         powerline.append(dict_segment['contents'], color_fg, color_bg)
+        # powerline.append_right(dict_segment['contents'], color_fg, color_bg, separator=powerline.separator_right)
 
 
+powerline.set_cur_position("left")
 add_docker_segment(powerline)
 def add_root_segment(powerline):
     root_indicators = {
@@ -625,7 +793,15 @@ def add_root_segment(powerline):
         fg = Color.CMD_FAILED_FG
         bg = Color.CMD_FAILED_BG
     powerline.append(root_indicators[powerline.args.shell], fg, bg)
+    # powerline.append_down(root_indicators[powerline.args.shell], fg, bg)
 
 
+powerline.set_cur_position("down")
 add_root_segment(powerline)
-sys.stdout.write(powerline.draw())
+segment_left, segment_right, segment_down = powerline.draw()
+if powerline.pos_segment == "left":
+	sys.stdout.write(segment_left)
+elif powerline.pos_segment == "right":
+	sys.stdout.write(segment_right)
+elif powerline.pos_segment == "down":
+	sys.stdout.write(segment_down)

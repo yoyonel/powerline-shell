@@ -10,3 +10,4 @@ def add_root_segment(powerline):
         fg = Color.CMD_FAILED_FG
         bg = Color.CMD_FAILED_BG
     powerline.append(root_indicators[powerline.args.shell], fg, bg)
+    # powerline.append_down(root_indicators[powerline.args.shell], fg, bg)

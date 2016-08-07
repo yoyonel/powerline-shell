@@ -1,7 +1,23 @@
-PS1="[e[1;33m][ u[e[1;37m]@[e[1;32m]h[e[1;33m] W$(git branch 2> /dev/null | grep -e '* ' | sed 's/^..(.*)/ {[e[1;36m]1[e[1;33m]}/') ][e[0m]n==> "
-function _update_ps1()
-{
-export PS1="$(~/powerline-shell.py  --cwd-max-depth 2 $?)"
-}
-export PROMPT_COMMAND="_update_ps1"
+CHROOT=`ls -di / | awk '{if ($1 != "2") print 1; else print 0;}'`
+function _update_ps1() {
+    if [ "$TERM" != "linux" ] ; then
+       if [ "$(uname)" == "Darwin" ]; then
+          update_terminal_cwd
+       fi
+       PREV=$?
+       EXTRA=`logname`@`hostname`
+       # export PS1="$(~/.powerline-shell.py ${PREV} --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA})"
+       # result_from_python_script=$(~/.powerline-shell.py ${PREV} --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA})
+       
+       pws_segment_left="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4 --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA} --pos_segment left)"
+       pws_segment_right="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4 --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA} --pos_segment right)"
+       pws_segment_down="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4 --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA} --pos_segment down)"
 
+       prompt=$(echo $pws_segment_left '\n' $pws_segment_down)
+       export PS1=$prompt
+       # export PS1=""
+       # printf '%*b' ${COLUMNS} $pws_segment_right
+    fi
+}
+
+export PROMPT_COMMAND="_update_ps1"

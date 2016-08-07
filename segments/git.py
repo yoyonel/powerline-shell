@@ -101,11 +101,13 @@ def add_git_segment(powerline):
         fg = Color.REPO_DIRTY_FG
 
     powerline.append(' %s ' % branch, fg, bg)
+    # powerline.append_right(' %s ' % branch, fg, bg, separator=powerline.separator_right)
 
     def _add(_dict, _key, fg, bg):
         if _dict[_key]:
             _str = u' {}{} '.format(_n_or_empty(_dict, _key), GIT_SYMBOLS[_key])
             powerline.append(_str, fg, bg)
+            # powerline.append_right(_str, fg, bg, separator=powerline.separator_right)
 
     if branch_info:
         _add(branch_info, 'ahead', Color.GIT_AHEAD_FG, Color.GIT_AHEAD_BG)

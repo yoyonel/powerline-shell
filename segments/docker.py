@@ -131,3 +131,4 @@ def add_docker_segment(powerline):
     for dict_segment in list_dict_segments:
         color_fg, color_bg = dict_segment['colors']
         powerline.append(dict_segment['contents'], color_fg, color_bg)
+        # powerline.append_right(dict_segment['contents'], color_fg, color_bg, separator=powerline.separator_right)

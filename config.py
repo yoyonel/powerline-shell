@@ -17,13 +17,13 @@ SEGMENTS = [
     #	'uptime',
 
     # Show time
-    'time',
+    ['time', 'left'],
 
     # Show the current user's username as in ordinary prompts
-    'username',
+    # ['username', 'left'],
 
     # Show the machine's hostname. Mostly used when ssh-ing into other machines
-    #    'hostname',
+    'hostname',
 
     # Show a padlock when ssh-ing from another machine
     #    'ssh',
@@ -34,10 +34,10 @@ SEGMENTS = [
 
     # Show a padlock if the current user has no write access to the current
     # directory
-    'read_only',
+    # 'read_only',
 
     # Show the current git branch and status
-    'git',
+    ['git', 'left'],
 
     # Show the current mercurial branch and status
     #    'hg',
@@ -49,16 +49,15 @@ SEGMENTS = [
     #    'fossil',
 
     # Show number of running jobs
-    #    'jobs',
+    'jobs',
 
     # Show the last command's exit code if it was non-zero
     #    'exit_code',
-
-    'docker',
+    ['docker', 'left'],
 
     # Shows a '#' if the current user is root, '$' otherwise
     # Also, changes color if the last command exited with a non-zero error code
-    'root',
+    ['root', 'down'],
 ]
 
 # Change the colors used to draw individual segments in your prompt
