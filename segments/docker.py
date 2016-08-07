@@ -51,7 +51,7 @@ class DockerSegment(Segment):
         segments = [
             # {'contents': u'\U0001F433 ', 'highlight_groups': ['docker'], 'divider_highlight_group': 'docker:divider'}
             {
-                'contents': u'\u1F433',
+                'contents': u'\U0001F433 ',
                 # 'highlight_groups': ['docker'],
                 # 'divider_highlight_group': 'docker:divider',
                 'colors': [Color.DOCKER_FG, Color.DOCKER_BG]
