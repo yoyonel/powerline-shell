@@ -8,7 +8,7 @@
 
 SEGMENTS = [
     # Set the terminal window title to user@host:dir
-    # 'set_term_title',
+    'set_term_title',
 
     # Show current virtual environment (see http://www.virtualenv.org/)
     #    'virtual_env',
@@ -28,10 +28,6 @@ SEGMENTS = [
     # Show a padlock when ssh-ing from another machine
     #    'ssh',
 
-    # Show the current directory. If the path is too long, the middle part is
-    # replaced with ellipsis ('...')
-    ['cwd', 'down'],
-
     # Show a padlock if the current user has no write access to the current
     # directory
     # 'read_only',
@@ -49,15 +45,23 @@ SEGMENTS = [
     #    'fossil',
 
     # Show number of running jobs
-    'jobs',
+    # 'jobs',
 
     # Show the last command's exit code if it was non-zero
     #    'exit_code',
     ['docker', 'left'],
 
+    #############################
+    # Segment 'down'
+    #############################
+    # Show the current directory. If the path is too long, the middle part is
+    # replaced with ellipsis ('...')
+    ['cwd', 'down'],
+
     # Shows a '#' if the current user is root, '$' otherwise
     # Also, changes color if the last command exited with a non-zero error code
     ['root', 'down'],
+    #############################
 ]
 
 # Change the colors used to draw individual segments in your prompt
