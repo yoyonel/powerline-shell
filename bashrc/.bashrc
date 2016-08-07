@@ -6,15 +6,17 @@ function _update_ps1() {
        fi
        PREV=$?
        EXTRA=`logname`@`hostname`
-       # export PS1="$(~/.powerline-shell.py ${PREV} --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA})"
+
+       export PS1="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4)"
+
        # result_from_python_script=$(~/.powerline-shell.py ${PREV} --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA})
        
-       pws_segment_left="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4 --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA} --pos_segment left)"
-       pws_segment_right="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4 --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA} --pos_segment right)"
-       pws_segment_down="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4 --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA} --pos_segment down)"
+       # pws_segment_left="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4 --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA} --pos_segment left)"
+       # pws_segment_right="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4 --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA} --pos_segment right)"
+       # pws_segment_down="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4 --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA} --pos_segment down)"
 
-       prompt=$(echo $pws_segment_left '\n' $pws_segment_down)
-       export PS1=$prompt
+       # prompt=$(echo $pws_segment_left '\n' $pws_segment_down)
+       # export PS1=$prompt
        # export PS1=""
        # printf '%*b' ${COLUMNS} $pws_segment_right
     fi

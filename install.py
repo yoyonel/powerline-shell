@@ -49,11 +49,11 @@ if __name__ == "__main__":
             source += 'powerline.set_cur_position("{}")\n'.format("left")
             source += 'add_{}_segment(powerline)\n'.format(segment)
 
-    # source += 'sys.stdout.write(powerline.draw()[0])\n'
-    source += 'segment_left, segment_right, segment_down = powerline.draw()\n'
-    source += 'if powerline.pos_segment == "left":\n\tsys.stdout.write(segment_left)\n'
-    source += 'elif powerline.pos_segment == "right":\n\tsys.stdout.write(segment_right)\n'
-    source += 'elif powerline.pos_segment == "down":\n\tsys.stdout.write(segment_down)\n'
+    source += 'sys.stdout.write(powerline.draw())\n'
+    # source += 'segment_left, segment_right, segment_down = powerline.draw()\n'
+    # source += 'if powerline.pos_segment == "left":\n\tsys.stdout.write(segment_left)\n'
+    # source += 'elif powerline.pos_segment == "right":\n\tsys.stdout.write(segment_right)\n'
+    # source += 'elif powerline.pos_segment == "down":\n\tsys.stdout.write(segment_down)\n'
 
     try:
         open(OUTPUT_FILE, 'w').write(source)

@@ -183,10 +183,10 @@ class Powerline:
         if py3:
             return text
         else:
-            # return text.encode('utf-8')
-            return text_left.encode('utf-8'), \
-                   text_right.encode('utf-8'), \
-                   text_down.encode('utf-8')
+            return text.encode('utf-8')
+            # return text_left.encode('utf-8'), \
+            #        text_right.encode('utf-8'), \
+            #        text_down.encode('utf-8')
 
     def draw_segment(self, idx):
         segment = self.segments[idx]
@@ -277,13 +277,14 @@ if __name__ == "__main__":
     arg_parser.add_argument('prev_error', nargs='?', type=int, default=0,
                             help='Error code returned by the last command')
     #
-    arg_parser.add_argument('--width', action='store', default=0,
-                            help='')
-    arg_parser.add_argument('--chroot', action='store', default=0)
-    arg_parser.add_argument('--extra', action='store', default='')
-    arg_parser.add_argument('--pos_segment', action='store', default='left',
-                            help='')
+    # arg_parser.add_argument('--width', action='store', default=0,
+    #                         help='')
+    # arg_parser.add_argument('--chroot', action='store', default=0)
+    # arg_parser.add_argument('--extra', action='store', default='')
+    # arg_parser.add_argument('--pos_segment', action='store', default='left',
+    #                         help='')
     #
     args = arg_parser.parse_args()
 
-    powerline = Powerline(args, get_valid_cwd(), width=args.width, pos_segment=args.pos_segment)
+    # powerline = Powerline(args, get_valid_cwd(), width=args.width, pos_segment=args.pos_segment)
+    powerline = Powerline(args, get_valid_cwd())
