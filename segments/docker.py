@@ -53,7 +53,12 @@ class DockerSegment(Segment):
     def build_segments(self, statuses_count):
         segments = [
             # {'contents': u'\U0001F433 ', 'highlight_groups': ['docker'], 'divider_highlight_group': 'docker:divider'}
-            {'contents': u'\u1F433', 'highlight_groups': ['docker'], 'divider_highlight_group': 'docker:divider', 'colors': [Color.DOCKER_FG, Color.DOCKER_BG]}
+            {
+                'contents': u'\U0001F433 ',
+                'highlight_groups': ['docker'],
+                'divider_highlight_group': 'docker:divider',
+                'colors': [Color.DOCKER_FG, Color.DOCKER_BG]
+            }
         ]
 
         for count in statuses_count:
