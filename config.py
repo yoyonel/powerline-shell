@@ -17,7 +17,7 @@ SEGMENTS = [
     #	'uptime',
 
     # Show time
-    ['time', 'left'],
+    ['time', 'right'],
 
     # Show the current user's username as in ordinary prompts
     # ['username', 'left'],

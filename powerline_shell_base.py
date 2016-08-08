@@ -128,27 +128,35 @@ class Powerline:
                                    separator_fg if separator_fg is not None else bg))
         self.segments_down_width += len(content)
 
+    def draw_left_segments(self):
+        return (''.join(self.draw_segment(i) for i in range(len(self.segments)))
+                     + self.reset) + ' '
+
+    def draw_right_segments(self):
+        return (''.join(self.draw_right_segment(i) for i in range(len(self.segments_right)))
+                     + self.reset) + ' '
+
+    def draw_down_segments(self):
+        return (''.join(self.draw_down_segment(i) for i in range(len(self.segments_down)))
+                     + self.reset) + ' '
+
     def draw(self):
-        text_left = (''.join(self.draw_segment(i) for i in range(len(self.segments)))
-                     + self.reset) + ' '
-        self.segments_width += len(self.segments) * 3  # for self.reset*len(self.segments) + ' '
-        #
-        text_right = (''.join(self.draw_right_segment(i) for i in reversed(range(len(self.segments_right))))
-                      + self.reset) + ' '
-        self.segments_right_width += len(self.segments_right) * 3  # for self.reset*len(self.segments_right) + ' '
+        text_left = self.draw_left_segments()
+        text_right = self.draw_right_segments()
+        text_down = self.draw_down_segments()
+
+        # self.segments_width += len(self.segments) * 3  # for self.reset*len(self.segments) + ' '
+        # self.segments_right_width += len(self.segments_right) * 3  # for self.reset*len(self.segments_right) + ' '
         # self.segments_right_width = 21 + 3
-
-        text_down = (''.join(self.draw_down_segment(i) for i in range(len(self.segments_down)))
-                     + self.reset) + ' '
-
-        total_widths = self.segments_width + \
-                       self.segments_right_width
-
-        spaces = max(0, int(self.width) - total_widths)
-        fold = ' ' * spaces
+        # total_widths = self.segments_width + \
+        #                self.segments_right_width
+        # spaces = max(0, int(self.width) - total_widths)
+        # fold = ' ' * spaces
 
         if len(self.segments_down) > 0:
-            text = text_left + fold + text_right + \
+            # text = text_left + fold + text_right + \
+            #        '\n' + text_down + self.reset
+            text = text_left + \
                    '\n' + text_down + self.reset
         else:
             text = text_left + self.reset
@@ -281,8 +289,8 @@ if __name__ == "__main__":
     #                         help='')
     # arg_parser.add_argument('--chroot', action='store', default=0)
     # arg_parser.add_argument('--extra', action='store', default='')
-    # arg_parser.add_argument('--pos_segment', action='store', default='left',
-    #                         help='')
+    arg_parser.add_argument('--pos_segment', action='store', default='left',
+                            help='')
     #
     args = arg_parser.parse_args()
 
