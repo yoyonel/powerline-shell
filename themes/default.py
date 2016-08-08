@@ -65,6 +65,11 @@ class DefaultColor:
     DOCKER_EXITED_FG = 160
     DOCKER_RESTARTING_FG = 253
 
+    ROS_BG = 255
+    ROS_FG = 17
+    ROS_RUNNING_FG = 40
+    ROS_STOP_FG = 160
+
 
 class Color(DefaultColor):
     """
