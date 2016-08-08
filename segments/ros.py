@@ -21,6 +21,7 @@ class ROSSegment(Segment):
 
     @staticmethod
     def ros_get_version():
+        # url: http://linux.die.net/man/1/rosversion
         bashCommand = "rosversion -d"
         ros_version = "<unknown>"
         try:
@@ -34,9 +35,11 @@ class ROSSegment(Segment):
     @staticmethod
     def ros_rosmaster_enable():
         result = False
+        # url: http://stackoverflow.com/a/13333130
         try:
             cmd = "ps -A|grep rosmaster|wc -l"
             ps = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            # url: http://stackoverflow.com/questions/275018/how-can-i-remove-chomp-a-newline-in-python
             output = ps.communicate()[0].rstrip("\n")
         except Exception as e:
             print("except: {}" % e)
@@ -49,6 +52,7 @@ class ROSSegment(Segment):
         #
         segments = [
             {
+                # url: http://www.fontspace.com/unicode/char/1F422-turtle
                 'contents': u'\U0001F422 ',  # unicode d'une tortue
                 'colors': [Color.ROS_FG, Color.ROS_BG]
             }
