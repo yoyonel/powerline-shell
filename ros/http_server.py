@@ -1,9 +1,11 @@
+# url: https://mafayyaz.wordpress.com/2013/02/08/writing-simple-http-server-in-python-with-rest-and-json/
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from SocketServer import ThreadingMixIn
 import threading
 import argparse
 import re
 import cgi
+import simplejson
 
 
 class LocalData(object):
@@ -17,9 +19,15 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             # print("ctype:", ctype)
             if ctype == 'application/json':
                 length = int(self.headers.getheader('content-length'))
-                data = cgi.parse_qs(self.rfile.read(length), keep_blank_values=1)
+                data = self.rfile.read(length)
+                # url: http://stackoverflow.com/questions/31371166/reading-json-from-simplehttpserver-post-data
+                data_json = simplejson.loads(data)
+                # print("data:", data)
+                # print("=> {}".format(simplejson.loads(data)))
+                # data = cgi.parse_qs(data, keep_blank_values=1)
                 recordID = self.path.split('/')[-1]
-                LocalData.records[recordID] = data
+                # LocalData.records[recordID] = data
+                LocalData.records[recordID] = data_json
                 print "record %s is added successfully" % recordID
             else:
                 data = {}

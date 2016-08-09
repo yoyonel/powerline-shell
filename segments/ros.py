@@ -23,6 +23,9 @@ SEGMENT_INFO = {
         'icon': u'\uf05c ',  # url: rond + croix (refus)
         'colors': [Color.ROS_STOP_FG, Color.ROS_BG]
     },
+    'ros_topics_number': {
+        'colors': [Color.ROS_FG, Color.ROS_BG]
+    },
     'ros_version': {
         'colors': [Color.ROS_FG, Color.ROS_BG]
     },
@@ -88,6 +91,16 @@ class ROSSegment(Segment):
         output = ROSSegment.execute_cmd("sed -e '$!d' ~/.powerline-shell.ROS.topics", 0)
         return output
 
+    def ros_rostopic_number_with_httpserver(self):
+        nb_topics = -1
+        if self.dict_json:
+            nb_topics = 0
+            try:
+                nb_topics = self.dict_json['topics']
+            except KeyError:
+                nb_topics = -1
+        return nb_topics
+
     def get_value_from_db(self, key, default=None):
         try:
             value = self.db[key]
@@ -122,18 +135,13 @@ class ROSSegment(Segment):
         return is_reachable
 
     def ros_master_reachable_with_daemon_httpserver(self):
+        ros_master_reachable = False
         try:
-            r = requests.get('http://127.0.0.1:8080/api/v1/getrecord/ros')
-            # url: http://stackoverflow.com/questions/988228/converting-a-string-to-dictionary
-            str_dicts = ast.literal_eval(r.content)
-            print(str_dicts)
-            # dict_ros_reachable = ast.literal_eval()
-            # is_reachable = dict_ros_reachable["reachable"] == '0'
-            # return is_reachable
-        except Exception, e:
-            pass
+            ros_master_reachable = self.dict_json['reachable'] == '1'
+        except KeyError:
+            ros_master_reachable = False
         finally:
-            return True
+            return ros_master_reachable
 
     def ros_master_reachable_with_daemon_files(self):
         is_reachable = os.path.isfile(self.home_path + "/.powerline-shell.ROS.reachable")
@@ -162,6 +170,9 @@ class ROSSegment(Segment):
 
             # Ros Master URI
             segments.append(ROSSegment.build_segment_ros_master_uri())
+
+            # Ros Topics number
+            segments.append(self.build_segment_ros_topics())
 
         return segments
 
@@ -208,7 +219,27 @@ class ROSSegment(Segment):
             }
         return segment
 
+    def build_segment_ros_topics(self):
+        segment = {}
+        # Version ROS
+        ros_topics_number = self.ros_rostopic_number_with_httpserver()
+        if ros_topics_number != "0":
+            segment = {
+                'contents': ' %s' % ros_topics_number,
+                'colors': SEGMENT_INFO['ros_topics_number']['colors']
+            }
+        return segment
+
     def __call__(self, pl, ignore_statuses=[]):
+        try:
+            r = requests.get('http://127.0.0.1:8080/api/v1/getrecord/ros')
+            # url: http://stackoverflow.com/questions/988228/converting-a-string-to-dictionary
+            self.dict_json = ast.literal_eval(r.content)
+            # print(dict_json)
+        except Exception, e:
+            print("Exception: ", e)
+            self.dict_json = {}
+
         return self.build_segments()
 
 
