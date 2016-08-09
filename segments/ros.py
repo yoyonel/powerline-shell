@@ -5,6 +5,8 @@ import shelve
 from os.path import expanduser
 from time import time
 import os.path
+import ast
+import requests
 
 ROS_STATUSES = ('running')
 
@@ -80,6 +82,12 @@ class ROSSegment(Segment):
         list_topics = output.split('\n')
         return list_topics
 
+    @staticmethod
+    def ros_rostopic_number():
+        # is_reachable = os.path.isfile(self.home_path + "/.powerline-shell.ROS.topics")
+        output = ROSSegment.execute_cmd("sed -e '$!d' ~/.powerline-shell.ROS.topics", 0)
+        return output
+
     def get_value_from_db(self, key, default=None):
         try:
             value = self.db[key]
@@ -113,7 +121,21 @@ class ROSSegment(Segment):
 
         return is_reachable
 
-    def ros_master_reachable_with_daemon(self):
+    def ros_master_reachable_with_daemon_httpserver(self):
+        try:
+            r = requests.get('http://127.0.0.1:8080/api/v1/getrecord/ros')
+            # url: http://stackoverflow.com/questions/988228/converting-a-string-to-dictionary
+            str_dicts = ast.literal_eval(r.content)
+            print(str_dicts)
+            # dict_ros_reachable = ast.literal_eval()
+            # is_reachable = dict_ros_reachable["reachable"] == '0'
+            # return is_reachable
+        except Exception, e:
+            pass
+        finally:
+            return True
+
+    def ros_master_reachable_with_daemon_files(self):
         is_reachable = os.path.isfile(self.home_path + "/.powerline-shell.ROS.reachable")
         return is_reachable
 
@@ -154,7 +176,7 @@ class ROSSegment(Segment):
     def build_segment_ros_master_reachable(self):
         #
         # b_rosmaster = self.ros_master_reachable_with_db()
-        b_rosmaster = self.ros_master_reachable_with_daemon()
+        b_rosmaster = self.ros_master_reachable_with_daemon_httpserver()
         #
         rosmaster = 'ros_master_reachable' if b_rosmaster else 'ros_master_unreachable'
         segment = {
