@@ -56,6 +56,8 @@ class DefaultColor:
     VIRTUAL_ENV_BG = 35  # a mid-tone green
     VIRTUAL_ENV_FG = 00
 
+    DAEMON_NOT_UP_TO_DATE_FG = 208  # orange
+
     # Colors for Docker segment
     # url: http://bitmote.com/index.php?post/2012/11/19/Using-ANSI-Color-Codes-to-Colorize-Your-Bash-Prompt-on-Linux
     DOCKER_BG = 32
@@ -64,11 +66,12 @@ class DefaultColor:
     DOCKER_PAUSED_FG = 214
     DOCKER_EXITED_FG = 160
     DOCKER_RESTARTING_FG = 253
+    DOCKER_DAEMON_NOT_UP_TO_DATE_FG = DAEMON_NOT_UP_TO_DATE_FG  # orange
 
     ROS_BG = 255
     ROS_FG = 17
     ROS_RUNNING_FG = 40
-    ROS_DAEMON_NOT_UP_TO_DATE_FG = 208  # orange
+    ROS_DAEMON_NOT_UP_TO_DATE_FG = DAEMON_NOT_UP_TO_DATE_FG  # orange
     ROS_STOP_FG = 160
     ROS_MASTER_URI_FG = 17
     ROS_MASTER_URI_BG = 255

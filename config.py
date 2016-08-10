@@ -49,7 +49,8 @@ SEGMENTS = [
 
     # Show the last command's exit code if it was non-zero
     #    'exit_code',
-    ['docker', 'left'],
+    # ['docker', 'left'],
+    ['docker_with_daemon', 'left'],
 
     ['ros', 'left'],
     ['ros_full', 'left'],
