@@ -71,6 +71,7 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 class SimpleHttpServer():
     def __init__(self, ip, port):
         self.server = ThreadedHTTPServer((ip, port), HTTPRequestHandler)
+        self.server_thread = None
 
     def start(self):
         self.server_thread = threading.Thread(target=self.server.serve_forever)
@@ -86,6 +87,7 @@ class SimpleHttpServer():
     def stop(self):
         self.server.shutdown()
         self.waitForThread()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='HTTP Server')

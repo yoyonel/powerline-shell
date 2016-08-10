@@ -68,7 +68,7 @@ class DockerSegment(Segment):
         return segments
 
     def __call__(self, pl, base_url='unix://var/run/docker.sock', use_tls=False, ca_cert=None, client_cert=None,
-                 client_key=None, ignore_statuses=[]):
+                 client_key=None, ignore_statuses=None):
         # pl.debug('Running powerline-docker')
 
         self.pl = pl
