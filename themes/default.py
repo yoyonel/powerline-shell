@@ -68,6 +68,7 @@ class DefaultColor:
     ROS_BG = 255
     ROS_FG = 17
     ROS_RUNNING_FG = 40
+    ROS_DAEMON_NOT_UP_TO_DATE_FG = 208  # orange
     ROS_STOP_FG = 160
     ROS_MASTER_URI_FG = 17
     ROS_MASTER_URI_BG = 255

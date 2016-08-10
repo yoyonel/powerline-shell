@@ -1,4 +1,4 @@
-CHROOT=`ls -di / | awk '{if ($1 != "2") print 1; else print 0;}'`
+# CHROOT=`ls -di / | awk '{if ($1 != "2") print 1; else print 0;}'`
 function _update_ps1() {
     if [ "$TERM" != "linux" ] ; then
        if [ "$(uname)" == "Darwin" ]; then
@@ -23,3 +23,8 @@ function _update_ps1() {
 }
 
 export PROMPT_COMMAND="_update_ps1"
+
+# on s'assure d'avoir le no_proxy sette pour eviter de bloquer notre
+# serveur HTTP (en local)
+# url: http://stackoverflow.com/questions/4181703/how-can-i-concatenate-string-variables-in-bash
+export no_proxy=$no_proxy,localhost,127.0.0.1

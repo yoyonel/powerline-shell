@@ -15,6 +15,7 @@ do
 		ROS_topics_counter=`rostopic list | wc -l`
 		# echo ROS_topics_counter: $ROS_topics_counter
 		# echo ROS_topics_list: $ROS_topics_list
+		ROS_nodes_counter=`rosnode list | wc -l`
 	else
 		ROS_topics_counter=0
 	fi
@@ -25,11 +26,14 @@ do
 	# else
 	# 	touch $filename_for_ROS_reachable
 	# fi
+ 	
+ 	# url: http://unix.stackexchange.com/questions/69322/how-to-get-milliseconds-since-unix-epoch
+ 	cur_time=`date +%s%3N`
 
 	# requete curl pour sauvegarder les infos
 	# url: http://stackoverflow.com/questions/17029902/using-curl-post-with-variables-defined-in-bash-script-functions
 	curl -H "Content-Type: application/json" -X POST \
-		--data '{"reachable":"'"$ROS_reachable"'","topics":"'"$ROS_topics_counter"'"}'  \
+		--data '{"time":"'"$cur_time"'","reachable":"'"$ROS_reachable"'","topics":"'"$ROS_topics_counter"'","nodes":"'"$ROS_nodes_counter"'"}'  \
 		http://127.0.0.1:8080/api/v1/addrecord/ros
 
 	sleep 1.0

@@ -23,7 +23,16 @@ SEGMENT_INFO = {
         'icon': u'\uf05c ',  # url: rond + croix (refus)
         'colors': [Color.ROS_STOP_FG, Color.ROS_BG]
     },
+    'ros_daemon_not_up_to_date': {
+        'icon': u'\u2370 ',  # => Apl functional symbol quad question: ⍰
+        'colors': [Color.ROS_DAEMON_NOT_UP_TO_DATE_FG, Color.ROS_BG]
+    },
     'ros_topics_number': {
+        'icon': u'\u2341',  # => Apl functional symbol quad slash: ⍁
+        'colors': [Color.ROS_FG, Color.ROS_BG]
+    },
+    'ros_nodes_number': {
+        'icon': u'\u2b2d',  # => White horizontal ellipse: ⬭
         'colors': [Color.ROS_FG, Color.ROS_BG]
     },
     'ros_version': {
@@ -44,6 +53,7 @@ class ROSSegment(Segment):
         # url: http://stackoverflow.com/questions/4028904/how-to-get-the-home-directory-in-python
         self.home_path = expanduser("~")
         self.db = shelve.open(self.home_path + "/.powerline-shell.ros")
+        self.httpserver_last_update_time = 0.0
 
     # url: http://stackoverflow.com/questions/865115/how-do-i-correctly-clean-up-a-python-object
     def __exit__(self, exc_type, exc_value, traceback):
@@ -81,7 +91,7 @@ class ROSSegment(Segment):
 
     @staticmethod
     def ros_rostopic_list():
-        output = ROSSegment.execute_cmd("rostopic list", "")
+        output = ROSSegment.execute_cmd("rostopic list")
         list_topics = output.split('\n')
         return list_topics
 
@@ -100,6 +110,16 @@ class ROSSegment(Segment):
             except KeyError:
                 nb_topics = -1
         return nb_topics
+
+    def ros_rosnode_number_with_httpserver(self):
+        nb_nodes = -1
+        if self.dict_json:
+            nb_nodes = 0
+            try:
+                nb_nodes = self.dict_json['nodes']
+            except KeyError:
+                nb_nodes = -1
+        return nb_nodes
 
     def get_value_from_db(self, key, default=None):
         try:
@@ -149,32 +169,11 @@ class ROSSegment(Segment):
 
     @staticmethod
     def ros_master_uri():
-        return ROSSegment.execute_cmd("echo $ROS_MASTER_URI", "")
+        return ROSSegment.execute_cmd("echo $ROS_MASTER_URI")
 
     @staticmethod
     def ros_env_active():
-        return ROSSegment.execute_cmd("which roscore", "") != ""
-
-    def build_segments(self):
-        segments = []
-        #
-        segments.append(ROSSegment.build_segment_ros_logo())
-
-        # Rosmaster reachable ?
-        segments.append(self.build_segment_ros_master_reachable())
-
-        # set env ros ?
-        if ROSSegment.ros_env_active():
-            # ROS version
-            segments.append(ROSSegment.build_segment_ros_version())
-
-            # Ros Master URI
-            segments.append(ROSSegment.build_segment_ros_master_uri())
-
-            # Ros Topics number
-            segments.append(self.build_segment_ros_topics())
-
-        return segments
+        return ROSSegment.execute_cmd("which roscore") != ""
 
     @staticmethod
     def build_segment_ros_logo():
@@ -186,14 +185,19 @@ class ROSSegment(Segment):
 
     def build_segment_ros_master_reachable(self):
         #
+        segment = {}
         # b_rosmaster = self.ros_master_reachable_with_db()
-        b_rosmaster = self.ros_master_reachable_with_daemon_httpserver()
-        #
-        rosmaster = 'ros_master_reachable' if b_rosmaster else 'ros_master_unreachable'
-        segment = {
-            'contents': ' %s' % (SEGMENT_INFO[rosmaster]['icon']),
-            'colors': SEGMENT_INFO[rosmaster]['colors']
-        }
+        if self.b_reach_httpserver:
+            b_rosmaster = self.ros_master_reachable_with_daemon_httpserver()
+            #
+            if self.b_datas_up_to_date:
+                rosmaster = 'ros_master_reachable' if b_rosmaster else 'ros_master_unreachable'
+            else:
+                rosmaster = 'ros_daemon_not_up_to_date'
+            segment = {
+                'contents': ' %s' % (SEGMENT_INFO[rosmaster]['icon']),
+                'colors': SEGMENT_INFO[rosmaster]['colors']
+            }
         return segment
 
     @staticmethod
@@ -221,14 +225,68 @@ class ROSSegment(Segment):
 
     def build_segment_ros_topics(self):
         segment = {}
-        # Version ROS
-        ros_topics_number = self.ros_rostopic_number_with_httpserver()
-        if ros_topics_number != "0":
-            segment = {
-                'contents': ' %s' % ros_topics_number,
-                'colors': SEGMENT_INFO['ros_topics_number']['colors']
-            }
+        if self.b_reach_httpserver:
+            #
+            ros_topics_number = self.ros_rostopic_number_with_httpserver()
+            if ros_topics_number != "0":
+                SEGMENT_INFO_colors = 'ros_topics_number' if self.b_datas_up_to_date else 'ros_daemon_not_up_to_date'
+                segment = {
+                    'contents': ' %s %s' % (SEGMENT_INFO['ros_topics_number']['icon'], ros_topics_number),
+                    'colors': SEGMENT_INFO[SEGMENT_INFO_colors]['colors']
+                }
         return segment
+
+    def build_segment_ros_nodes(self):
+        segment = {}
+        if self.b_reach_httpserver:
+            #
+            ros_nodes_number = self.ros_rosnode_number_with_httpserver()
+            if ros_nodes_number != "0":
+                SEGMENT_INFO_colors = 'ros_nodes_number' if self.b_datas_up_to_date else 'ros_daemon_not_up_to_date'
+                segment = {
+                    'contents': ' %s %s' % (SEGMENT_INFO['ros_nodes_number']['icon'], ros_nodes_number),
+                    'colors': SEGMENT_INFO[SEGMENT_INFO_colors]['colors']
+                }
+        return segment
+
+    def datas_up_to_date(self):
+        max_delta_time = 2000.0    # in ms
+        try:
+            httpserver_last_update_time = float(self.dict_json['time'])    # in ms
+            # maj du dernier temps d'update par le serveur HTTP
+            # self.httpserver_last_update_time = httpserver_cur_update_time
+            cur_time = time() * 1000    # in ms
+            delta_update_time = cur_time - httpserver_last_update_time
+            # print("%s %s %s" % (cur_time, httpserver_last_update_time, delta_update_time))
+            self.b_datas_up_to_date = delta_update_time < max_delta_time
+        except Exception, e:
+            print("Exception: ", e)
+            self.b_datas_up_to_date = False
+
+    def build_segments(self):
+        segments = []
+        #
+        segments.append(ROSSegment.build_segment_ros_logo())
+
+        # Rosmaster reachable ?
+        segments.append(self.build_segment_ros_master_reachable())
+
+        # set env ros ?
+        if ROSSegment.ros_env_active():
+            # ROS version
+            segments.append(ROSSegment.build_segment_ros_version())
+
+            # Ros Master URI
+            segments.append(ROSSegment.build_segment_ros_master_uri())
+
+            if self.ros_master_reachable_with_daemon_httpserver():
+                # Ros Topics number
+                segments.append(self.build_segment_ros_topics())
+
+                # Ros Nodes number
+                segments.append(self.build_segment_ros_nodes())
+
+        return segments
 
     def __call__(self, pl, ignore_statuses=[]):
         try:
@@ -236,9 +294,13 @@ class ROSSegment(Segment):
             # url: http://stackoverflow.com/questions/988228/converting-a-string-to-dictionary
             self.dict_json = ast.literal_eval(r.content)
             # print(dict_json)
-        except Exception, e:
-            print("Exception: ", e)
+            self.b_reach_httpserver = True
+            self.datas_up_to_date()
+        except:
+            # except Exception, e:
+            # print("Exception: ", e)
             self.dict_json = {}
+            self.b_reach_httpserver = False
 
         return self.build_segments()
 
