@@ -26,7 +26,7 @@ SEGMENTS = [
     'hostname',
 
     # Show a padlock when ssh-ing from another machine
-    #    'ssh',
+    'ssh',
 
     # Show a padlock if the current user has no write access to the current
     # directory
@@ -44,9 +44,6 @@ SEGMENTS = [
     # Show the current fossil branch and status
     #    'fossil',
 
-    # Show number of running jobs
-    # 'jobs',
-
     # Show the last command's exit code if it was non-zero
     #    'exit_code',
     # ['docker', 'left'],
@@ -59,6 +56,9 @@ SEGMENTS = [
     #############################
     # Segment 'down'
     #############################
+    # Show number of running jobs
+    ['jobs', 'down'],
+
     # Show the current directory. If the path is too long, the middle part is
     # replaced with ellipsis ('...')
     ['cwd', 'down'],

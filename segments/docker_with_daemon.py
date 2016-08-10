@@ -4,8 +4,7 @@ import requests
 from time import time
 
 
-def datas_up_to_date(httpserver_last_update_time):
-    max_delta_time = 2.0    # in ms
+def datas_up_to_date(httpserver_last_update_time, max_delta_time=2.0):
     b_datas_up_to_date = False
     try:
         # maj du dernier temps d'update par le serveur HTTP
@@ -13,20 +12,15 @@ def datas_up_to_date(httpserver_last_update_time):
         delta_update_time = cur_time - httpserver_last_update_time
         # print("%s %s %s" % (cur_time, httpserver_last_update_time, delta_update_time))
         b_datas_up_to_date = delta_update_time < max_delta_time
-    except Exception, e:
-        print("Exception: ", e)
-        b_datas_up_to_date = False
-    return b_datas_up_to_date
+    except:
+        # except Exception, e:
+        # print("Exception: ", e)
+        pass
+    finally:
+        return b_datas_up_to_date
 
 
 def add_docker_with_daemon_segment(powerline):
-    # list_dict_segments = docker(None)
-
-    # for dict_segment in list_dict_segments:
-    #     color_fg, color_bg = dict_segment['colors']
-    #     powerline.append(dict_segment['contents'], color_fg, color_bg)
-    #     # powerline.append_right(dict_segment['contents'], color_fg, color_bg, separator=powerline.separator_right)
-
     dict_json = {}
     b_reach_httpserver = False
     b_datas_up_to_date = False
@@ -37,17 +31,16 @@ def add_docker_with_daemon_segment(powerline):
         dict_json = ast.literal_eval(r.content)
         # print(dict_json)
         b_reach_httpserver = True
-        b_datas_up_to_date = datas_up_to_date(dict_json['time'])
+        httpserver_last_update_time = dict_json['time']
+        b_datas_up_to_date = datas_up_to_date(httpserver_last_update_time)
     except:
         # except Exception, e:
         # print("Exception: ", e)
-        dict_json = {}
-        b_reach_httpserver = False
+        pass
 
     # print("- dict_json: {}\n\
     #     - b_datas_up_to_date: {}\n\
-    #     b_reach_httpserver: {}\n".format(dict_json,
-    #                                      b_datas_up_to_date, b_reach_httpserver))
+    #     - b_reach_httpserver: {}\n".format(dict_json, b_datas_up_to_date, b_reach_httpserver))
     if b_reach_httpserver:
         try:
             list_dict_segments = dict_json["segments"]
