@@ -4,3 +4,6 @@ powerline-shell.py
 
 # Pycharm
 .idea/
+
+# Log files
+*.log

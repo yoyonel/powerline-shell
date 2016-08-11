@@ -6,6 +6,15 @@ import argparse
 import re
 import cgi
 import simplejson
+import logging
+
+
+# url: http://stackoverflow.com/questions/13180720/maintaining-logging-and-or-stdout-stderr-in-python-daemon
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+# fh = logging.FileHandler("./daemon-docker.log")
+fh = logging.NullHandler()
+logger.addHandler(fh)
 
 
 class LocalData(object):
@@ -28,7 +37,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 recordID = self.path.split('/')[-1]
                 # LocalData.records[recordID] = data
                 LocalData.records[recordID] = data_json
-                print "record %s is added successfully" % recordID
+                logger.debug("record %s is added successfully" % recordID)
             else:
                 data = {}
             self.send_response(200)
@@ -96,6 +105,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     server = SimpleHttpServer(args.ip, args.port)
-    print 'HTTP Server Running...........'
+    logger.debug('HTTP Server Running...........')
     server.start()
     server.waitForThread()

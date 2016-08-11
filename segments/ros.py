@@ -54,13 +54,13 @@ class ROSSegment(Segment):
         self.home_path = expanduser("~")
         self.db = shelve.open(self.home_path + "/.powerline-shell.ros")
         self.httpserver_last_update_time = 0.0
+        self.logger = None
 
     # url: http://stackoverflow.com/questions/865115/how-do-i-correctly-clean-up-a-python-object
     def __exit__(self, exc_type, exc_value, traceback):
         self.db.close()
 
-    @staticmethod
-    def ros_get_version():
+    def ros_get_version(self):
         # url: http://linux.die.net/man/1/rosversion
         bashCommand = "rosversion -d"
         ros_version = "<unknown>"
@@ -68,12 +68,11 @@ class ROSSegment(Segment):
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
             ros_version = process.communicate()[0].rstrip()
         except Exception as e:
-            print("except: {}" % e)
+            self.logger.debug("except: {}" % e)
         finally:
             return ros_version
 
-    @staticmethod
-    def execute_cmd(cmd, default=""):
+    def execute_cmd(self, cmd, default=""):
         output = ""
         # url: http://stackoverflow.com/a/13333130
         try:
@@ -81,24 +80,21 @@ class ROSSegment(Segment):
             # url: http://stackoverflow.com/questions/275018/how-can-i-remove-chomp-a-newline-in-python
             output = bashprocess.communicate()[0].rstrip("\n")
         except Exception as e:
-            print("except: {}" % e)
+            self.logger.debug("except: {}" % e)
         finally:
             return output
 
-    @staticmethod
-    def ros_master_running():
-        return ROSSegment.execute_cmd("ps -A|grep rosmaster|wc -l", "0") == "1"
+    def ros_master_running(self):
+        return self.execute_cmd("ps -A|grep rosmaster|wc -l", "0") == "1"
 
-    @staticmethod
-    def ros_rostopic_list():
-        output = ROSSegment.execute_cmd("rostopic list")
+    def ros_rostopic_list(self):
+        output = self.execute_cmd("rostopic list")
         list_topics = output.split('\n')
         return list_topics
 
-    @staticmethod
-    def ros_rostopic_number():
+    def ros_rostopic_number(self):
         # is_reachable = os.path.isfile(self.home_path + "/.powerline-shell.ROS.topics")
-        output = ROSSegment.execute_cmd("sed -e '$!d' ~/.powerline-shell.ROS.topics", 0)
+        output = self.execute_cmd("sed -e '$!d' ~/.powerline-shell.ROS.topics", 0)
         return output
 
     def ros_rostopic_number_with_httpserver(self):
@@ -137,16 +133,16 @@ class ROSSegment(Segment):
         last_time = self.get_value_from_db('ros_master_reachable.time', 0.0)
         delta_time = cur_time - last_time
         max_delta_time_for_update = 5.0
-        # print("delta time: ", delta_time)
+        # self.logger.debug("delta time: ", delta_time)
         if delta_time > max_delta_time_for_update:
-            # print("update db value")
+            # self.logger.debug("update db value")
             output = self.execute_cmd("rostopic list; echo $?", "1")
             return_error = output.split('\n')[-1]
             is_reachable = return_error == '0'
             #
             self.set_value_for_db("ros_master_reachable.time", cur_time)
         else:
-            # print("used db value")
+            # self.logger.debug("used db value")
             is_reachable = self.get_value_from_db('ros_master_reachable.reachable', False)
 
         # update db
@@ -167,13 +163,11 @@ class ROSSegment(Segment):
         is_reachable = os.path.isfile(self.home_path + "/.powerline-shell.ROS.reachable")
         return is_reachable
 
-    @staticmethod
-    def ros_master_uri():
-        return ROSSegment.execute_cmd("echo $ROS_MASTER_URI")
+    def ros_master_uri(self):
+        return self.execute_cmd("echo $ROS_MASTER_URI")
 
-    @staticmethod
-    def ros_env_active():
-        return ROSSegment.execute_cmd("which roscore") != ""
+    def ros_env_active(self):
+        return self.execute_cmd("which roscore") != ""
 
     @staticmethod
     def build_segment_ros_logo():
@@ -200,10 +194,9 @@ class ROSSegment(Segment):
             }
         return segment
 
-    @staticmethod
-    def build_segment_ros_master_uri():
+    def build_segment_ros_master_uri(self):
         segment = {}
-        ros_master_uri = ROSSegment.ros_master_uri().replace('http://', '')
+        ros_master_uri = self.ros_master_uri().replace('http://', '')
         # ros_master_uri = re.sub(r'[^0-9]', "", ros_master_uri)
         segment = {
             'contents': ' %s  %s' % (SEGMENT_INFO['ros_master_uri']['icon'], ros_master_uri),
@@ -211,11 +204,10 @@ class ROSSegment(Segment):
         }
         return segment
 
-    @staticmethod
-    def build_segment_ros_version():
+    def build_segment_ros_version(self):
         segment = {}
         # Version ROS
-        ros_version = ROSSegment.ros_get_version()
+        ros_version = self.ros_get_version()
         if ros_version != "<unknown>":
             segment = {
                 'contents': ' %s' % ros_version,
@@ -257,10 +249,10 @@ class ROSSegment(Segment):
             # self.httpserver_last_update_time = httpserver_cur_update_time
             cur_time = time() * 1000    # in ms
             delta_update_time = cur_time - httpserver_last_update_time
-            # print("%s %s %s" % (cur_time, httpserver_last_update_time, delta_update_time))
+            # self.logger.debug("%s %s %s" % (cur_time, httpserver_last_update_time, delta_update_time))
             self.b_datas_up_to_date = delta_update_time < max_delta_time
         except Exception, e:
-            print("Exception: ", e)
+            self.logger.debug("[ros.py] Exception: ", e)
             self.b_datas_up_to_date = False
 
     def build_segments(self):
@@ -272,12 +264,12 @@ class ROSSegment(Segment):
         segments.append(self.build_segment_ros_master_reachable())
 
         # set env ros ?
-        if ROSSegment.ros_env_active():
+        if self.ros_env_active():
             # ROS version
-            segments.append(ROSSegment.build_segment_ros_version())
+            segments.append(self.build_segment_ros_version())
 
             # Ros Master URI
-            segments.append(ROSSegment.build_segment_ros_master_uri())
+            segments.append(self.build_segment_ros_master_uri())
 
             if self.ros_master_reachable_with_daemon_httpserver():
                 # Ros Topics number
@@ -288,17 +280,20 @@ class ROSSegment(Segment):
 
         return segments
 
-    def __call__(self, pl, ignore_statuses=[]):
+    def __call__(self, pl, bash_pid, ignore_statuses=[]):
         try:
-            r = requests.get('http://127.0.0.1:8080/api/v1/getrecord/ros')
+            url = 'http://127.0.0.1:8080/api/v1/getrecord/ros/' + str(bash_pid)
+            pl.debug("[ros.py] url: %s" % url)
+
+            r = requests.get(url)
             # url: http://stackoverflow.com/questions/988228/converting-a-string-to-dictionary
             self.dict_json = ast.literal_eval(r.content)
-            # print(dict_json)
+            # self.logger.debug(dict_json)
             self.b_reach_httpserver = True
             self.datas_up_to_date()
         except:
             # except Exception, e:
-            # print("Exception: ", e)
+            # self.logger.debug("Exception: ", e)
             self.dict_json = {}
             self.b_reach_httpserver = False
 

@@ -1,30 +1,44 @@
-# CHROOT=`ls -di / | awk '{if ($1 != "2") print 1; else print 0;}'`
-function _update_ps1() {
-    if [ "$TERM" != "linux" ] ; then
-       if [ "$(uname)" == "Darwin" ]; then
-          update_terminal_cwd
-       fi
-       PREV=$?
-       EXTRA=`logname`@`hostname`
+# PowerLine bash
 
-       export PS1="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4)"
+function _update_ps1()
+{
+  # echo --bash_pid $BASHPID
+  # ps: faire attention, $BASHPID doit etre une interpretation
+  # du shell, du coup ca peut poser problème a la transmission !
+  EVALBASHPID=$BASHPID
+  export PS1="$(~/powerline-shell.py --cwd-max-depth 3 --bash_pid $EVALBASHPID $?)" 
+  # export PS1="$(~/powerline-shell.py --cwd-max-depth 3 --bash_pid 1234 $?)"
+  
+  # FOO="$(~/powerline-shell.py ${PREV} --cwd-max-depth 4)"
+    # echo ${#FOO[@]}
+    # echo $FOO
+    # pws_segment_left="$(~/powerline-shell.py ${PREV} --cwd-max-depth 4 --pos_segment left)"
+    # pws_segment_right="$(~/powerline-shell.py ${PREV} --cwd-max-depth 4 --pos_segment right)"
+    # pws_segment_down="$(~/powerline-shell.py ${PREV} --cwd-max-depth 4 --pos_segment down)"
 
-       # result_from_python_script=$(~/.powerline-shell.py ${PREV} --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA})
-       
-       # pws_segment_left="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4 --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA} --pos_segment left)"
-       # pws_segment_right="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4 --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA} --pos_segment right)"
-       # pws_segment_down="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4 --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA} --pos_segment down)"
-
-       # prompt=$(echo $pws_segment_left '\n' $pws_segment_down)
-       # export PS1=$prompt
-       # export PS1=""
-       # printf '%*b' ${COLUMNS} $pws_segment_right
-    fi
+    # url: http://tldp.org/HOWTO/Bash-Prog-Intro-HOWTO-8.html
+    _launch_daemon_ros
 }
 
-export PROMPT_COMMAND="_update_ps1"
+# PowerLineShell
 
-# on s'assure d'avoir le no_proxy sette pour eviter de bloquer notre
-# serveur HTTP (en local)
-# url: http://stackoverflow.com/questions/4181703/how-can-i-concatenate-string-variables-in-bash
+# PATH
+# export PLS_PATH=/home/latty/Prog/powerline/powerline-shell
+
+# Vars for Daemon ROS
+export PLS_DAEMON_ROS_LAUNCHED=0
+export DAEMON_ROS_BASH_FILE=$PLS_PATH/ros/daemon_ros.sh
+# Config pour HTTP Server
 export no_proxy=$no_proxy,localhost,127.0.0.1
+
+source $PLS_PATH/bashrc/launch_http_server.sh
+source $PLS_PATH/bashrc/launch_daemon_ros.sh
+source $PLS_PATH/bashrc/launch_daemon_docker.sh
+
+# HTTPSERVER configuration
+_launch_httpserver
+
+# Daemon Docker for PLS
+_launch_daemon_docker
+
+export PROMPT_COMMAND="_update_ps1"
