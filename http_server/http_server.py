@@ -13,6 +13,7 @@ import os
 # url: http://stackoverflow.com/questions/13180720/maintaining-logging-and-or-stdout-stderr-in-python-daemon
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+# url: http://stackoverflow.com/questions/4906977/access-environment-variables-from-python
 fh = logging.FileHandler(os.environ["PLS_PATH"]+"/logs/"+"pls_httpserver.log")
 # fh = logging.NullHandler()
 logger.addHandler(fh)
