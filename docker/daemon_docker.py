@@ -8,6 +8,7 @@ import daemon
 import time
 import requests
 import logging
+import os
 
 
 class Color:
@@ -164,14 +165,15 @@ def run():
     # url: http://stackoverflow.com/questions/13180720/maintaining-logging-and-or-stdout-stderr-in-python-daemon
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-    # fh = logging.FileHandler("./daemon-docker.log")
-    fh = logging.NullHandler()
+    fh = logging.FileHandler(os.environ["PLS_PATH"]+"/logs/"+"pls_daemon-docker.log")
+    # fh = logging.NullHandler()
     logger.addHandler(fh)
 
     try:
         with daemon.DaemonContext(files_preserve=[fh.stream, ],):
             post_docker_statuses(logger)
     except:
+        # except Exception, e:
         with daemon.DaemonContext():
             post_docker_statuses(logger)
 

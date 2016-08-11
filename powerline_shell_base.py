@@ -308,7 +308,7 @@ if __name__ == "__main__":
     # url: http://stackoverflow.com/questions/13180720/maintaining-logging-and-or-stdout-stderr-in-python-daemon
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-    fh = logging.FileHandler("./powerline-shell.log")
+    fh = logging.FileHandler(os.environ["PLS_PATH"]+"/logs/"+"powerline-shell.log")
     # fh = logging.NullHandler()
     logger.addHandler(fh)
 

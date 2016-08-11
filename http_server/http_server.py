@@ -7,13 +7,14 @@ import re
 import cgi
 import simplejson
 import logging
+import os
 
 
 # url: http://stackoverflow.com/questions/13180720/maintaining-logging-and-or-stdout-stderr-in-python-daemon
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-# fh = logging.FileHandler("./daemon-docker.log")
-fh = logging.NullHandler()
+fh = logging.FileHandler(os.environ["PLS_PATH"]+"/logs/"+"pls_httpserver.log")
+# fh = logging.NullHandler()
 logger.addHandler(fh)
 
 
@@ -22,6 +23,20 @@ class LocalData(object):
 
 
 class HTTPRequestHandler(BaseHTTPRequestHandler):
+    @staticmethod
+    def get_suffix(prefix, path):
+        """
+
+        :param prefix:
+        :param path:
+        :return:
+        """
+        # urls:
+        # - https://docs.python.org/2/library/re.html
+        # - http://stackoverflow.com/questions/12572362/get-a-string-after-a-specific-substring
+        m = re.search('(?:'+prefix+')(.*)', path)
+        return m.group(1)
+
     def do_POST(self):
         if re.search('/api/v1/addrecord/*', self.path) is not None:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
@@ -34,7 +49,8 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 # print("data:", data)
                 # print("=> {}".format(simplejson.loads(data)))
                 # data = cgi.parse_qs(data, keep_blank_values=1)
-                recordID = self.path.split('/')[-1]
+                # recordID = self.path.split('/')[-1]
+                recordID = self.get_suffix('api/v1/addrecord/', self.path)
                 # LocalData.records[recordID] = data
                 LocalData.records[recordID] = data_json
                 logger.debug("record %s is added successfully" % recordID)
@@ -50,7 +66,10 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if re.search('/api/v1/getrecord/*', self.path) is not None:
-            recordID = self.path.split('/')[-1]
+            # recordID = self.path.split('/')[-1]
+            # m = re.search('(?:api/v1/getrecord/)(.*)', self.path)
+            # recordID = m.group(1)
+            recordID = self.get_suffix('api/v1/getrecord/', self.path)
             # print("recordID: ", recordID)
             # print("LocalData.records.keys():", LocalData.records.keys())
             if recordID in LocalData.records.keys():
