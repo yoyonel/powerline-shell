@@ -2,7 +2,12 @@
 
 
 def add_ros_full_segment(powerline):
-    list_dict_segments = ros(None)
+    logger = powerline.logger
+
+    logger.debug("[ros_full] add_ros_full_segment: bash_pid=%s" % powerline.bash_pid)
+
+    # on transmet le pid du bash et un logger au ROS segment (builder)
+    list_dict_segments = ros(logger, powerline.bash_pid)
 
     for dict_segment in list_dict_segments:
         try:

@@ -5,6 +5,7 @@ from __future__ import print_function
 import argparse
 import os
 import sys
+import logging
 
 # import unicodedata
 # import re
@@ -57,7 +58,7 @@ class Powerline:
         'bare': '%s',
     }
 
-    def __init__(self, _args, cwd, width=0, pos_segment="left"):
+    def __init__(self, _args, cwd, width=0, pos_segment="left", bash_pid="0", logger=logging.NullHandler()):
         self.args = _args
         self.cwd = cwd
         mode, shell = args.mode, args.shell
@@ -82,6 +83,13 @@ class Powerline:
         #
         self.pos_segment = pos_segment
         self.cur_position = "left"
+        #
+        self.bash_pid=bash_pid
+
+        self.logger = logger
+
+        logger.debug("__init__ => bash_pid: %s" % bash_pid)
+
 
     def set_cur_position(self, pos):
         self.cur_position = pos
@@ -292,7 +300,23 @@ if __name__ == "__main__":
     arg_parser.add_argument('--pos_segment', action='store', default='left',
                             help='')
     #
+    arg_parser.add_argument('--bash_pid', action='store', type=int, default=0,
+                            help='PID of the current bash calling the powerline.py python script')
+    #
     args = arg_parser.parse_args()
 
+    # url: http://stackoverflow.com/questions/13180720/maintaining-logging-and-or-stdout-stderr-in-python-daemon
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    fh = logging.FileHandler("./powerline-shell.log")
+    # fh = logging.NullHandler()
+    logger.addHandler(fh)
+
+    logger.debug("main() => args.bash_pid: %s" % args.bash_pid)
+
     # powerline = Powerline(args, get_valid_cwd(), width=args.width, pos_segment=args.pos_segment)
-    powerline = Powerline(args, get_valid_cwd())
+
+    # on transmet:
+    # - le pid du bash qui fait l'appel au programme (requiere by ROS segment)
+    # - un logger pour le debug
+    powerline = Powerline(args, get_valid_cwd(), bash_pid=args.bash_pid, logger=logger)
