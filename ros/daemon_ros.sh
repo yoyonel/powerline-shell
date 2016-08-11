@@ -1,14 +1,23 @@
 #!/bin/bash
 
-filename_for_ROS_reachable=~/.powerline-shell.ROS.reachable
-filename_for_ROS_topics=~/.powerline-shell.ROS.topics
+# filename_for_ROS_reachable=~/.powerline-shell.ROS.reachable
+# filename_for_ROS_topics=~/.powerline-shell.ROS.topics
 
 # urls
 # - http://www.cyberciti.biz/faq/bash-infinite-loop/
 # - http://tldp.org/LDP/Bash-Beginners-Guide/html/sect_09_02.html
 # - http://stackoverflow.com/questions/3043978/how-to-check-if-a-process-id-pid-exists
 # -> http://stackoverflow.com/a/15774758
-while ps -p $SHELLPID &> /dev/null;
+# while ps -p $SHELLPID &> /dev/null;
+
+# => on boucle tant que le bash associe au shell
+# qui a lance la creation de ce demon est actif (non tue)
+# ps: comme ce daemon est lance a l'aide de nohup
+# il n'est pas child du parent (shell/bash), donc quand
+# le shell se detruit, il detruit le bash qui ne possede pas cet
+# enfant daemon.
+# while ps -p $UPDATEPS1_BASHID &> /dev/null;
+while [ -n "$(ps -p $UPDATEPS1_BASHID -o pid=)" ];
 do
 	if [ -x "$(command -v roscore)" ]; then
 		# url: http://stackoverflow.com/questions/4651437/how-to-set-a-variable-equal-to-the-output-from-a-command-in-bash
@@ -18,9 +27,12 @@ do
 		# url: http://tldp.org/LDP/Bash-Beginners-Guide/html/sect_07_01.html
 		if [ $ROS_reachable -ne 0 ]; then
 			ROS_topics_counter=`rostopic list | wc -l`
+			ROS_nodes_counter=`rosnode list | wc -l`
+			################################################
+			# [DEBUG]
 			# echo ROS_topics_counter: $ROS_topics_counter
 			# echo ROS_topics_list: $ROS_topics_list
-			ROS_nodes_counter=`rosnode list | wc -l`
+			################################################
 		else
 			ROS_topics_counter=0
 		fi
