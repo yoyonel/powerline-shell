@@ -38,25 +38,28 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         m = re.search('(?:'+prefix+')(.*)', path)
         return m.group(1)
 
+    def do_POST_for_application_json(self):
+        """
+
+        :return:
+        """
+        recordID = self.get_suffix('api/v1/addrecord/', self.path)
+
+        length = int(self.headers.getheader('content-length'))
+        data = self.rfile.read(length)
+        # url: http://stackoverflow.com/questions/31371166/reading-json-from-simplehttpserver-post-data
+        data_json = simplejson.loads(data)
+
+        LocalData.records[recordID] = data_json
+
+        logger.debug("record %s is added successfully" % recordID)
+
     def do_POST(self):
         if re.search('/api/v1/addrecord/*', self.path) is not None:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
             # print("ctype:", ctype)
             if ctype == 'application/json':
-                length = int(self.headers.getheader('content-length'))
-                data = self.rfile.read(length)
-                # url: http://stackoverflow.com/questions/31371166/reading-json-from-simplehttpserver-post-data
-                data_json = simplejson.loads(data)
-                # print("data:", data)
-                # print("=> {}".format(simplejson.loads(data)))
-                # data = cgi.parse_qs(data, keep_blank_values=1)
-                # recordID = self.path.split('/')[-1]
-                recordID = self.get_suffix('api/v1/addrecord/', self.path)
-                # LocalData.records[recordID] = data
-                LocalData.records[recordID] = data_json
-                logger.debug("record %s is added successfully" % recordID)
-            else:
-                data = {}
+                self.do_POST_for_application_json()
             self.send_response(200)
             self.end_headers()
         else:
@@ -75,13 +78,11 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             # print("LocalData.records.keys():", LocalData.records.keys())
             if recordID in LocalData.records.keys():
                 self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
                 self.wfile.write(LocalData.records[recordID])
             else:
                 self.send_response(400, 'Bad Request: record does not exist')
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
         else:
             self.send_response(403)
             self.send_header('Content-Type', 'application/json')
