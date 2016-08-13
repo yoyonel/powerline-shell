@@ -35,6 +35,7 @@ do
 			################################################
 		else
 			ROS_topics_counter=0
+			ROS_nodes_counter=0
 		fi
 
 		# url: http://unix.stackexchange.com/questions/69322/how-to-get-milliseconds-since-unix-epoch
@@ -45,7 +46,21 @@ do
 		curl -H "Content-Type: application/json" -X POST \
 			--data '{"time":"'"$cur_time"'","reachable":"'"$ROS_reachable"'","topics":"'"$ROS_topics_counter"'","nodes":"'"$ROS_nodes_counter"'"}'  \
 			http://127.0.0.1:8080/api/v1/addrecord/ros/$UPDATEPS1_BASHID
-		# echo http://127.0.0.1:8080/api/v1/addrecord/ros/$UPDATEPS1_BASHID
+
+		#####################
+		# Update de la DB
+		#####################
+		# urls:
+		# - http://sqlite.1065341.n5.nabble.com/sqlite-and-boolean-type-some-problem-td59742.html
+		# - https://linuxconfig.org/bash-printf-syntax-basics-with-examples
+		# - http://wiki.bash-hackers.org/commands/builtin/printf
+		# - http://stackoverflow.com/questions/3634984/insert-if-not-exists-else-update
+		echo $(printf "%s" "INSERT OR REPLACE INTO ros VALUES (" "\"uuid\"," $UPDATEPS1_BASHID "," "\""$cur_time"\"," $ROS_reachable"," $ROS_topics_counter"," $ROS_nodes_counter ");") > tmp_query
+		cat tmp_query > ros_daemon.log
+		# url: http://stackoverflow.com/questions/21758769/running-a-sqlite3-script-from-command-line
+		sqlite3 /home/atty/Prog/powerline/powerline-shell_yoyonel/sqlite/pls.db < tmp_query
+		#rm tmp_query
+		#####################
 	fi
 
 	sleep 1.0
