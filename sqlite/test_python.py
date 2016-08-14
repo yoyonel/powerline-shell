@@ -33,9 +33,9 @@ class Mabase():
             c.executescript("""
                 create table docker(
                     uuid_system VARCHAR(36),
-                    bashid      INTEGER,
-                    segment     VARCHAR(256),
-                    PRIMARY KEY (uuid_system, bashid)
+                    time        VARCHAR(256),
+                    segments    VARCHAR(256),
+                    PRIMARY KEY (uuid_system)
                 );
 
                 create table ros(

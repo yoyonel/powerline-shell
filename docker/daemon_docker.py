@@ -9,6 +9,7 @@ import time
 import requests
 import logging
 import os
+import sqlite3
 
 
 class Color:
@@ -142,40 +143,98 @@ Highlight groups used: ``docker_running``, ``docker_paused``, ``docker_exited``,
 # url: http://stackoverflow.com/questions/4637420/efficient-python-daemon
 
 
+def build_dict_json():
+    """
+
+    :return:
+    """
+    list_dict_segments = docker(None)
+    dict_json = {
+        "time": time.time(),
+        "segments": list_dict_segments
+    }
+    return dict_json
+
+
+def update_http_server(url, logger):
+    datas_json = build_dict_json()
+    logger.debug("update_http_server - datas_json : {}".format(datas_json))
+
+    try:
+        r = requests.post(url, json=datas_json)
+        logger.debug("=> r: {}".format(r))
+    # url: http://stackoverflow.com/questions/16511337/correct-way-to-try-except-using-python-requests-module
+    except requests.exceptions.RequestException as e:
+        logger.debug("Exception: ", e)
+
+
 def post_docker_statuses(logger):
     # url: http://docs.python-requests.org/en/master/user/quickstart/#more-complicated-post-requests
     url = "http://127.0.0.1:8080/api/v1/addrecord/docker"
     while True:
-        list_dict_segments = docker(None)
-        try:
-            datas_json = {
-                "time": time.time(),
-                "segments": list_dict_segments
-            }
-            r = requests.post(url, json=datas_json)
-            logger.debug("=> r: {}".format(r))
-        # url: http://stackoverflow.com/questions/16511337/correct-way-to-try-except-using-python-requests-module
-        except requests.exceptions. RequestException as e:
-            logger.debug("Exception: ", e)
+        update_http_server(url, logger)
+        time.sleep(1)  # in s.
 
-        time.sleep(1)   # in s.
+
+def update_db_server(db_filename, logger):
+    logger.debug("update_db_server - db_filename: {}".format(db_filename))
+
+    datas_json = build_dict_json()
+    logger.debug("update_db_server - datas_json : {}".format(datas_json))
+
+    try:
+        # etablish connection to DB server
+        conn = sqlite3.connect(db_filename)
+
+        c = conn.cursor()
+        try:
+            # Obtention d'un curseur
+            sql_query = """INSERT or REPLACE into docker values ( "uuid", "{}", "{}");""".format(datas_json["time"],
+                                                                                    datas_json["segments"])
+            logger.debug("DB - sql_query : {}".format(sql_query))
+
+            c.executescript(sql_query)
+
+        except Exception, e:
+            logger.debug("DB - executescript - Exception: {}".format(e))
+        finally:
+            c.close()
+    except Exception, e:
+        logger.debug("DB - connect - Exception: {}".format(e))
+
+
+def post_docker_statuses_db_server(logger):
+    """
+
+    :return:
+    """
+    db_filename = '/home/atty/Prog/powerline/powerline-shell_yoyonel/sqlite/pls.db'
+    while True:
+        try:
+            update_db_server(db_filename, logger)
+        except Exception, e:
+            logger.debug("post_docker_statuses_db_server - Exception: {}", e)
+
+        time.sleep(1)  # in s.
 
 
 def run():
     # url: http://stackoverflow.com/questions/13180720/maintaining-logging-and-or-stdout-stderr-in-python-daemon
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-    fh = logging.FileHandler(os.environ["PLS_PATH"]+"/logs/"+"pls_daemon-docker.log")
+    fh = logging.FileHandler(os.environ["PLS_PATH"] + "/logs/" + "pls_daemon-docker.log")
     # fh = logging.NullHandler()
     logger.addHandler(fh)
 
     try:
-        with daemon.DaemonContext(files_preserve=[fh.stream, ],):
+        with daemon.DaemonContext(files_preserve=[fh.stream, ], ):
             post_docker_statuses(logger)
+            # post_docker_statuses_db_server(logger)
     except:
         # except Exception, e:
         with daemon.DaemonContext():
             post_docker_statuses(logger)
+            # post_docker_statuses_db_server(logger)
 
 # url: http://sametmax.com/pourquoi-if-__name__-__main__-en-python/
 if __name__ == "__main__":

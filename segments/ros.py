@@ -7,6 +7,7 @@ from time import time
 import os.path
 import ast
 import requests
+import sqlite3
 
 ROS_STATUSES = ('running')
 
@@ -55,6 +56,9 @@ class ROSSegment(Segment):
         self.db = shelve.open(self.home_path + "/.powerline-shell.ros")
         self.httpserver_last_update_time = 0.0
         self.logger = None
+        self.bash_pid = 0
+        self.dict_json = {}
+        self.b_reach_server = False
 
     # url: http://stackoverflow.com/questions/865115/how-do-i-correctly-clean-up-a-python-object
     def __exit__(self, exc_type, exc_value, traceback):
@@ -68,7 +72,8 @@ class ROSSegment(Segment):
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
             ros_version = process.communicate()[0].rstrip()
         except Exception as e:
-            self.logger.debug("except: {}" % e)
+            # self.logger.debug("except: {}" % e)
+            pass
         finally:
             return ros_version
 
@@ -80,7 +85,8 @@ class ROSSegment(Segment):
             # url: http://stackoverflow.com/questions/275018/how-can-i-remove-chomp-a-newline-in-python
             output = bashprocess.communicate()[0].rstrip("\n")
         except Exception as e:
-            self.logger.debug("except: {}" % e)
+            # self.logger.debug("except: {}" % e)
+            pass
         finally:
             return output
 
@@ -181,7 +187,7 @@ class ROSSegment(Segment):
         #
         segment = {}
         # b_rosmaster = self.ros_master_reachable_with_db()
-        if self.b_reach_httpserver:
+        if self.b_reach_server:
             b_rosmaster = self.ros_master_reachable_with_daemon_httpserver()
             #
             if self.b_datas_up_to_date:
@@ -217,7 +223,7 @@ class ROSSegment(Segment):
 
     def build_segment_ros_topics(self):
         segment = {}
-        if self.b_reach_httpserver:
+        if self.b_reach_server:
             #
             ros_topics_number = self.ros_rostopic_number_with_httpserver()
             if ros_topics_number != "0":
@@ -230,7 +236,7 @@ class ROSSegment(Segment):
 
     def build_segment_ros_nodes(self):
         segment = {}
-        if self.b_reach_httpserver:
+        if self.b_reach_server:
             #
             ros_nodes_number = self.ros_rosnode_number_with_httpserver()
             if ros_nodes_number != "0":
@@ -252,7 +258,7 @@ class ROSSegment(Segment):
             # self.logger.debug("%s %s %s" % (cur_time, httpserver_last_update_time, delta_update_time))
             self.b_datas_up_to_date = delta_update_time < max_delta_time
         except Exception, e:
-            self.logger.debug("[ros.py] Exception: ", e)
+            # self.logger.debug("[ros.py] Exception: ", e)
             self.b_datas_up_to_date = False
 
     def build_segments(self):
@@ -280,22 +286,92 @@ class ROSSegment(Segment):
 
         return segments
 
-    def __call__(self, pl, bash_pid, ignore_statuses=[]):
-        try:
-            url = 'http://127.0.0.1:8080/api/v1/getrecord/ros/' + str(bash_pid)
-            pl.debug("[ros.py] url: %s" % url)
+    @staticmethod
+    def select_column_and_value(conn, sql_query, parameters=()):
+        """
+        urls:
+        - http://stackoverflow.com/questions/3300464/how-can-i-get-dict-from-sqlite-query
+        -> http://stackoverflow.com/a/33108733
 
+        :param conn:
+        :param sql_query:
+        :param parameters:
+        :return:
+        """
+        execute = conn.execute(sql_query, parameters)
+        fetch = execute.fetchone()
+
+        if fetch is None:
+            return {}
+
+        return {k[0]: v for k, v in list(zip(execute.description, fetch))}
+
+    def get_dict_json_from_httpserver(self):
+        """
+
+        :return:
+        """
+        dict_json = {}
+        b_reach_httpserver = False
+        try:
+            url = 'http://127.0.0.1:8080/api/v1/getrecord/ros/' + str(self.bash_pid)
+            self.logger.debug("[ros.py] url: %s" % url)
             r = requests.get(url)
+
             # url: http://stackoverflow.com/questions/988228/converting-a-string-to-dictionary
-            self.dict_json = ast.literal_eval(r.content)
-            # self.logger.debug(dict_json)
-            self.b_reach_httpserver = True
-            self.datas_up_to_date()
-        except:
-            # except Exception, e:
-            # self.logger.debug("Exception: ", e)
-            self.dict_json = {}
-            self.b_reach_httpserver = False
+            dict_json = ast.literal_eval(r.content)
+            self.logger.debug("HTTP - dict_json: %s" % dict_json)
+            b_reach_httpserver = True
+        except Exception, e:
+            self.logger.debug("Exception: %s" % e)
+
+        return dict_json, b_reach_httpserver
+
+    def get_dict_json_from_db(self):
+        """
+
+        :return:
+        """
+        dict_json = {}
+        b_reach_dbserver = False
+        try:
+            # etablish connection to DB server
+            conn = sqlite3.connect('/home/atty/Prog/powerline/powerline-shell_yoyonel/sqlite/pls.db')
+
+            try:
+                sql_query = "SELECT * FROM ros WHERE bashid = %s" % self.bash_pid
+                dict_json = self.select_column_and_value(conn, sql_query)
+                dict_json['reachable'] = str(dict_json['reachable'])
+                b_reach_dbserver = True
+                #
+                self.logger.debug("DB - sql_query: %s" % sql_query)
+                self.logger.debug("DB - self.dict_json_from_db: %s" % dict_json)
+            except Exception, e:
+                self.logger.debug("DB - SELECT - Exception: %s" % e)
+
+            # close connection
+            conn.close()
+        except Exception, e:
+            self.logger.debug("DB - CONNECT - Exception: %s" % e)
+
+        return dict_json, b_reach_dbserver
+
+    def __call__(self, pl, bash_pid, ignore_statuses=[]):
+        self.logger = pl
+        self.bash_pid = str(bash_pid)
+
+        # recuperation des donnees via le server DB
+        # si erreur, on recupere via le serveur HTTP [debug mode]
+        dict_json_db, b_reach_server_db = self.get_dict_json_from_db()
+        if b_reach_server_db:
+            self.dict_json = dict_json_db
+            self.b_reach_server = b_reach_server_db
+            self.logger.debug("ROS - get datas from DB Server!")
+        else:
+            self.dict_json, self.b_reach_server = self.get_dict_json_from_httpserver()
+            self.logger.debug("ROS - get datas from HTTP Server!")
+
+        self.datas_up_to_date()
 
         return self.build_segments()
 
