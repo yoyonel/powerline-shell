@@ -10,4 +10,5 @@ powerline-shell.py
 
 # DB
 *.db
+*.db-journal
 tmp_query
