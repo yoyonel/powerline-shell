@@ -10,3 +10,4 @@ powerline-shell.py
 
 # DB
 *.db
+tmp_query

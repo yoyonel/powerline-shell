@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PLS_SQLITE_PATH=/home/atty/Prog/powerline/powerline-shell_yoyonel/sqlite
+
 # filename_for_ROS_reachable=~/.powerline-shell.ROS.reachable
 # filename_for_ROS_topics=~/.powerline-shell.ROS.topics
 
@@ -55,10 +57,10 @@ do
 		# - https://linuxconfig.org/bash-printf-syntax-basics-with-examples
 		# - http://wiki.bash-hackers.org/commands/builtin/printf
 		# - http://stackoverflow.com/questions/3634984/insert-if-not-exists-else-update
-		echo $(printf "%s" "INSERT OR REPLACE INTO ros VALUES (" "\"uuid\"," $UPDATEPS1_BASHID "," "\""$cur_time"\"," $ROS_reachable"," $ROS_topics_counter"," $ROS_nodes_counter ");") > tmp_query
-		cat tmp_query > ros_daemon.log
+		echo $(printf "%s" "INSERT OR REPLACE INTO ros VALUES (" "\"uuid\"," $UPDATEPS1_BASHID "," "\""$cur_time"\"," $ROS_reachable"," $ROS_topics_counter"," $ROS_nodes_counter ");") > $PLS_SQLITE_PATH/tmp_query
+		cat $PLS_SQLITE_PATH/tmp_query > $PLS_SQLITE_PATH/ros_daemon.log
 		# url: http://stackoverflow.com/questions/21758769/running-a-sqlite3-script-from-command-line
-		sqlite3 /home/atty/Prog/powerline/powerline-shell_yoyonel/sqlite/pls.db < tmp_query
+		sqlite3 $PLS_SQLITE_PATH/pls.db < $PLS_SQLITE_PATH/tmp_query
 		#rm tmp_query
 		#####################
 	fi
