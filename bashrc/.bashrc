@@ -7,7 +7,7 @@ function _update_ps1() {
        PREV=$?
        EXTRA=`logname`@`hostname`
 
-       export PS1="$(~/.powerline-shell.py ${PREV} --cwd-max-depth 4)"
+       export PS1="$(~/powerline-shell.py ${PREV} --cwd-max-depth 4)"
 
        # result_from_python_script=$(~/.powerline-shell.py ${PREV} --width ${COLUMNS} --chroot ${CHROOT} --extra ${EXTRA})
        
