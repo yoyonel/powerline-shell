@@ -20,7 +20,11 @@ logger.addHandler(fh)
 
 
 class LocalData(object):
+    """
+
+    """
     records = {}
+    lock = threading.Lock()
 
 
 class HTTPRequestHandler(BaseHTTPRequestHandler):
@@ -39,6 +43,10 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         return m.group(1)
 
     def do_POST(self):
+        """
+
+        :return:
+        """
         if re.search('/api/v1/addrecord/*', self.path) is not None:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
             # print("ctype:", ctype)
@@ -53,10 +61,10 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 # recordID = self.path.split('/')[-1]
                 recordID = self.get_suffix('api/v1/addrecord/', self.path)
                 # LocalData.records[recordID] = data
+                LocalData.lock.acquire()
                 LocalData.records[recordID] = data_json
+                LocalData.lock.release()
                 logger.debug("record %s is added successfully" % recordID)
-            else:
-                data = {}
             self.send_response(200)
             self.end_headers()
         else:
@@ -66,6 +74,10 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         return
 
     def do_GET(self):
+        """
+
+        :return:
+        """
         if re.search('/api/v1/getrecord/*', self.path) is not None:
             # recordID = self.path.split('/')[-1]
             # m = re.search('(?:api/v1/getrecord/)(.*)', self.path)
@@ -73,6 +85,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             recordID = self.get_suffix('api/v1/getrecord/', self.path)
             # print("recordID: ", recordID)
             # print("LocalData.records.keys():", LocalData.records.keys())
+            LocalData.lock.acquire()
             if recordID in LocalData.records.keys():
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
@@ -82,6 +95,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(400, 'Bad Request: record does not exist')
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
+            LocalData.lock.release()
         else:
             self.send_response(403)
             self.send_header('Content-Type', 'application/json')
