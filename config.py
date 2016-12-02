@@ -11,7 +11,7 @@ SEGMENTS = [
     #    'set_term_title',
 
     # Show current virtual environment (see http://www.virtualenv.org/)
-    #    'virtual_env',
+    'virtual_env',
 
     # Show uptime
     #	'uptime',

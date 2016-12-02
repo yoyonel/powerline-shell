@@ -220,6 +220,20 @@ class Color(DefaultColor):
     pass
 
 
+import os
+
+def add_virtual_env_segment(powerline):
+    env = os.getenv('VIRTUAL_ENV') or os.getenv('CONDA_ENV_PATH')
+    if env is None:
+        return
+
+    env_name = os.path.basename(env)
+    bg = Color.VIRTUAL_ENV_BG
+    fg = Color.VIRTUAL_ENV_FG
+    powerline.append(' %s ' % env_name, fg, bg)
+
+
+add_virtual_env_segment(powerline)
 def add_time_segment(powerline):
     if powerline.args.shell == 'bash':
         #time = ' \\t '
