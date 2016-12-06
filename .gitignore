@@ -4,3 +4,9 @@ powerline-shell.py
 
 # Pycharm
 .idea/
+
+# Log files
+*.log
+TDD/test/__pycache__/
+__pycache__/
+logs/
