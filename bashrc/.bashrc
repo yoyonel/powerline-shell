@@ -5,7 +5,9 @@ function _update_ps1() {
           update_terminal_cwd
        fi
        PREV=$?
-       EXTRA=`logname`@`hostname`
+       #EXTRA=`logname`@`hostname`
+       EXTRA=`whoami`@`hostname`
+
 
        export PS1="$(~/powerline-shell.py ${PREV} --cwd-max-depth 4)"
 
